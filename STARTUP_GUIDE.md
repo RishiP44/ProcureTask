@@ -92,3 +92,37 @@ npm run dev
 *   **Login Failed?**: Make sure you ran the seed script (`npx ts-node src/seed.ts`).
 *   **Backend Error?**: Check if MongoDB is running.
 *   **File Uploads not working?**: Ensure the `backend/uploads` folder exists (it should be auto-created).
+
+---
+
+## 🌳 Git Workflow & Rules (TEAM READ THIS)
+To prevent breaking the `main` branch, please follow these rules:
+
+### 1. Branching
+**NEVER push directly to `main`.** Always work on a new branch.
+```bash
+# Good: Create a feature branch
+git checkout -b feature/add-new-button
+```
+
+### 2. Pulling Code
+Before starting work, always pull the latest changes to avoid conflicts.
+```bash
+git checkout main
+git pull origin main
+```
+
+### 3. Committing
+Write clear commit messages.
+```bash
+git add .
+git commit -m "Added submit button to login page"
+```
+
+### 4. Merging
+When your feature is done:
+1.  Push your branch: `git push origin feature/add-new-button`
+2.  Go to GitHub and create a **Pull Request (PR)**.
+3.  Ask a teammate to review the code.
+4.  Merge into `main` only after approval.
+
