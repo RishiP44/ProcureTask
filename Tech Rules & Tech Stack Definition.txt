@@ -1,0 +1,194 @@
+﻿Tech Rules & Tech Stack Definition
+Project: ProcureTrack – Procurement & Onboarding Workflow System
+________________
+
+
+1. Purpose of This Document
+This Tech Rules document defines the approved technology stack, architectural principles, and implementation guidelines for ProcureTrack.
+Its goal is to ensure:
+* Consistency across team members
+* Scalability for Term 2 expansion
+* Security for document handling
+* Maintainability for future features
+* Alignment with enterprise software standards
+These rules apply to all development activities throughout Term 1 and Term 2.
+________________
+
+
+2. Architectural Overview
+ProcureTrack will follow a modern full-stack, API-driven architecture with clear separation of concerns.
+Architecture Pattern
+* Client–Server Architecture
+* RESTful API
+* Role-based access control (RBAC)
+* Modular & scalable design
+High-Level Components
+* Web Frontend (Admin / HR / Employee / Vendor)
+* Backend API (business logic + security)
+* Database (relational, normalized)
+* File storage for uploaded documents
+* Authentication & authorization layer
+________________
+
+
+3. Frontend Tech Stack Rules
+3.1 Framework & Language
+* Framework: React (with Vite)
+* Language: TypeScript (mandatory)
+Rules
+* TypeScript must be used for all frontend components
+* Functional components only (no class components)
+* Strict typing enabled
+3.2 UI & Styling
+* UI Framework: Tailwind CSS
+* Component Strategy: Reusable components (buttons, forms, modals)
+Rules
+* No inline styles
+* No custom CSS files unless justified
+* Responsive design is mandatory (desktop-first, mobile-friendly)
+3.3 State & Data Handling
+* React Hooks (useState, useEffect)
+* API data handled via centralized service layer
+Rules
+* No direct API calls inside UI components
+* All API logic must live in /services
+________________
+
+
+4. Backend Tech Stack Rules
+4.1 Framework & Language
+* Runtime: Node.js
+* Framework: Express.js
+* Language: JavaScript (ES6+) or TypeScript (preferred)
+4.2 API Design
+* RESTful APIs
+* JSON request/response format
+Rules
+* One controller per domain (auth, workflows, tasks, users)
+* Clear route naming (/api/workflows, /api/tasks)
+* No business logic inside routes — use services
+4.3 Authentication & Authorization
+* JWT-based authentication
+* Role-Based Access Control (RBAC)
+Roles
+* Admin
+* HR
+* Employee
+* Vendor
+Rules
+* All protected routes must validate JWT
+* Role checks must be enforced server-side
+* Frontend role checks are secondary only
+________________
+
+
+5. Database & Data Management Rules
+5.1 Database
+* Database: MongoDB (Atlas) or PostgreSQL
+(MongoDB recommended for document flexibility)
+5.2 Data Modeling
+   * Separate collections/tables for:
+   * Users
+   * Roles
+   * Workflows
+   * Tasks
+   * Documents
+   * Assignments
+Rules
+   * No hardcoded data in the backend
+   * Proper references between entities
+   * Timestamps required (createdAt, updatedAt)
+________________
+
+
+6. File Upload & Document Storage Rules
+6.1 File Handling
+   * Documents uploaded via backend API
+   * File metadata stored in database
+6.2 Storage Strategy
+   * Local storage for MVP
+   * Architecture must allow future cloud migration (AWS S3)
+Rules
+   * Only accepted file types (PDF, JPG, PNG)
+   * File size limits enforced
+   * Users can only access their own documents
+________________
+
+
+7. DevOps, Version Control & CI/CD Rules
+7.1 Version Control
+   * Platform: GitHub
+   * Branch Strategy:
+   * main → stable
+   * dev → active development
+   * feature branches → per task
+7.2 CI/CD
+   * GitHub Actions (basic)
+   * Automatic build & lint checks
+Rules
+   * No direct commits to main
+   * Pull requests required
+   * Descriptive commit messages mandatory
+________________
+
+
+8. Security Rules
+   * Passwords must be hashed (bcrypt)
+   * JWT secrets stored in environment variables
+   * .env files never committed
+   * Input validation on both frontend & backend
+________________
+
+
+9. Testing & Quality Rules
+9.1 Testing Scope (MVP)
+   * Manual testing
+   * API testing via Postman
+   * Happy-path + edge cases
+9.2 Code Quality
+   * ESLint enabled
+   * Clear comments for complex logic
+   * Consistent naming conventions
+________________
+
+
+10. Constraints & Term 1 Limitations
+To ensure safe delivery in Term 1:
+   * No real third-party integrations
+   * No payment processing
+   * Mock integrations only
+   * Focus on functional MVP, not polish
+Advanced features are deferred to Term 2.
+________________
+
+
+11. Technology Stack Summary Table
+Layer
+	Technology
+	Frontend
+	React + TypeScript
+	Styling
+	Tailwind CSS
+	Backend
+	Node.js + Express
+	Auth
+	JWT + RBAC
+	Database
+	MongoDB / PostgreSQL
+	File Uploads
+	Local (MVP)
+	Version Control
+	GitHub
+	CI/CD
+	GitHub Actions
+	________________
+
+
+12. Alignment With Project Goals
+This tech stack supports:
+   * Workflow-based onboarding
+   * Multi-role access
+   * Secure document handling
+   * Scalable future integrations
+as defined in the ProcureTrack project overview
+ProcureTrack – Procurement & On…

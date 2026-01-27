@@ -1,0 +1,174 @@
+﻿Product Requirements Document (PRD)
+ProcureTrack – Procurement & Onboarding Workflow Management System
+________________
+
+
+1. Product Overview
+1.1 Product Name
+ProcureTrack
+1.2 Product Vision
+ProcureTrack is an internal enterprise web application designed to streamline employee and vendor onboarding workflows by replacing fragmented emails, spreadsheets, and manual checklists with a centralized, role-based workflow and document management system.
+The platform enables organizations to define reusable onboarding workflows, assign tasks, track progress, and securely collect required documents while providing real-time visibility to administrators.
+1.3 Problem Statement
+Organizations often manage onboarding through disconnected tools such as emails, spreadsheets, and shared folders, leading to:
+* Missed onboarding steps
+* Lack of visibility into progress
+* Delays in document collection
+* Manual follow-ups by HR and Procurement teams
+ProcureTrack solves this by providing a structured, trackable, and auditable onboarding process.
+________________
+
+
+2. Goals & Objectives
+2.1 Primary Goals (Term 1 – MVP)
+* Provide a workflow-driven onboarding system
+* Enable role-based access and task visibility
+* Allow secure document uploads
+* Give admins a clear progress dashboard
+2.2 Success Metrics
+* Onboarding workflows can be created and reused
+* Users can complete assigned tasks independently
+* Admins can monitor onboarding status at a glance
+* System supports multiple roles without data leakage
+________________
+
+
+3. Target Users & Roles
+3.1 User Roles
+Role
+	Description
+	Admin
+	Manages workflows, assigns onboarding, views reports
+	HR / Procurement
+	Oversees onboarding tasks and documents
+	Employee
+	Completes assigned onboarding tasks
+	Vendor
+	Uploads required documents and completes tasks
+	________________
+
+
+4. Functional Requirements (MVP – Term 1)
+4.1 Authentication & Authorization
+* Secure login system
+* Role-based access control (RBAC)
+* Users only see features relevant to their role
+________________
+
+
+4.2 Workflow Builder
+* Admins can:
+   * Create reusable onboarding workflows
+   * Define tasks (e.g., Upload ID, Sign Contract, Training Completion)
+   * Specify task type (document upload / checkbox / informational)
+* Workflows can be saved and reused
+________________
+
+
+4.3 Task Assignment
+* Admins assign workflows to Employees or Vendors
+* Assigned users see a checklist of tasks
+* Tasks have statuses:
+   * Pending
+   * Completed
+________________
+
+
+4.4 Task Completion System
+* Users can:
+   * Mark tasks as completed
+   * Upload required documents (if applicable)
+* System records:
+   * Completion status
+   * Timestamp
+________________
+
+
+4.5 Document Uploads
+* Secure file upload per task
+* Supported file types (PDF, JPG, PNG)
+* Uploaded documents are linked to specific tasks and users
+________________
+
+
+4.6 Admin Dashboard
+* Overview of all active onboardings
+* Displays:
+   * User name
+   * Workflow assigned
+   * Completion percentage
+   * Pending tasks
+* Filter by role or workflow
+________________
+
+
+5. Non-Functional Requirements
+5.1 Usability
+* Clean, intuitive UI
+* Minimal learning curve
+* Responsive design (desktop-first)
+5.2 Security
+* Role-based data access
+* File access restricted to authorized roles
+* Basic input validation and file type checks
+5.3 Performance
+* Dashboard loads under 2 seconds for typical datasets
+* Supports multiple concurrent users
+________________
+
+
+6. Nice-to-Have Features (Term 2 / Future Scope)
+* Candidate Tracker (Applied → Interview → Offer → Accepted)
+* Vendor Management Dashboard
+* Compliance & Training Checklists
+* Notification System (email or in-app alerts)
+* Mock integrations with HR systems (Workday / Salesforce)
+* Export onboarding reports (CSV / PDF)
+________________
+
+
+7. Deliverables
+Term 1 (MVP)
+* Responsive Web Application
+* Multi-role authentication system
+* Workflow Builder
+* Task completion & document upload
+* Admin dashboard with progress tracking
+Term 2 (Enhancements)
+* Mobile companion app (document upload)
+* Notifications
+* Reporting & exports
+* Mock external integrations
+________________
+
+
+8. Assumptions & Constraints
+* Internal enterprise use only
+* No real external API integrations in Term 1
+* Mock data and mock integrations are acceptable
+* Focus on functionality over advanced UI animations
+________________
+
+
+9. Risks & Mitigations
+Risk
+	Mitigation
+	Scope creep
+	Strict MVP definition
+	Missing team member
+	Build MVP solo-capable
+	Security complexity
+	Use basic RBAC & validation
+	Time constraints
+	Reusable workflows, modular design
+	________________
+
+
+10. Conclusion
+ProcureTrack aims to deliver a practical, workflow-driven onboarding system that replaces manual onboarding processes with a structured, transparent, and scalable solution. The MVP focuses on core onboarding functionality, while the architecture allows for expansion in future terms.
+________________
+
+
+Source
+Project requirements and scope based on provided project brief
+ProcureTrack – Procurement & On…

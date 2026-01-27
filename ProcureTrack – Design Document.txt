@@ -1,0 +1,372 @@
+﻿ProcureTrack – Design Document
+Procurement & Onboarding Workflow Management System
+________________
+
+
+1. Purpose of This Design Document
+This Design Document translates the Product Requirements Document (PRD) into visual, structural, and interaction-level specifications.
+The goal is to:
+* Define screen structure and layout
+
+* Establish UI patterns and components
+
+* Ensure role-based clarity
+
+* Guide future Figma / Gemini / implementation work
+
+* Avoid ambiguity during development
+
+This document focuses on MVP (Term 1), with clear extension points for Term 2.
+________________
+
+
+2. Design Inspiration & Direction
+Design Inspiration Sources
+   * Dribbble: Modern SaaS dashboards (Notion, Linear-style layouts)
+
+   * Mobbin: Enterprise onboarding flows (BambooHR, Rippling-style UX)
+
+Design Philosophy
+      * Clean, minimal, enterprise-first
+
+      * Checklist-driven UX
+
+      * Low cognitive load
+
+      * Data visibility for Admins
+
+      * Task clarity for Employees/Vendors
+
+Visual Style
+Element
+	Direction
+	Color Palette
+	Neutral base (gray/white) + single accent (blue or green)
+	Typography
+	Sans-serif (Inter / Roboto style)
+	Layout
+	Card-based, grid layout
+	Icons
+	Line icons (Lucide / Material Icons)
+	Motion
+	Minimal (progress bars, hover states only)
+	________________
+
+
+3. User Roles & Access Model
+Supported Roles (MVP)
+         1. Admin
+
+         2. HR / Procurement Staff
+
+         3. Employee
+
+         4. Vendor
+
+Each role sees only relevant workflows and actions.
+________________
+
+
+4. Information Architecture (IA)
+Global Navigation
+- Dashboard
+- My Tasks
+- Workflows (Admin only)
+- Users (Admin only)
+- Documents
+- Reports (Admin)
+- Settings
+
+
+Navigation adapts based on role.
+________________
+
+
+5. Core Screens & Wireframe-Level Specs
+________________
+
+
+5.1 Authentication Screens
+Login Screen
+Purpose: Secure role-based entry
+Components
+            * Email field
+
+            * Password field
+
+            * Role inferred from backend
+
+            * Login CTA
+
+            * Error messaging
+
+UX Notes
+               * No role selection on login (pre-assigned)
+
+               * Clean, distraction-free screen
+
+________________
+
+
+5.2 Admin Dashboard
+Purpose
+High-level visibility into onboarding progress.
+Layout
+Top Section
+                  * KPI cards:
+
+                     * Total Active Onboardings
+
+                     * Completed (%)
+
+                     * Pending Tasks
+
+                     * Overdue Tasks
+
+Middle Section
+                        * Table: Active Onboardings
+
+                           * Name
+
+                           * Role (Employee/Vendor)
+
+                           * Workflow
+
+                           * Progress %
+
+                           * Status
+
+Bottom Section
+                              * Recent activity feed
+
+________________
+
+
+5.3 Workflow Builder (Admin – MVP Focus)
+Purpose
+Create reusable onboarding workflows.
+Layout
+Left Panel
+                                 * Workflow list
+
+                                 * Create new workflow CTA
+
+Main Panel
+                                    * Workflow Name
+
+                                    * Workflow Description
+
+                                    * Task List (stacked cards)
+
+Task Card Components
+                                       * Task Name
+
+                                       * Task Type:
+
+                                          * Checkbox
+
+                                          * Document Upload
+
+                                             * Optional Notes
+
+                                             * Required / Optional toggle
+
+UX Notes
+                                                * Simple linear workflows (no branching in MVP)
+
+                                                * Drag & drop optional (stretch goal)
+
+________________
+
+
+5.4 Assign Workflow Screen
+Purpose
+Assign workflows to users.
+Components
+                                                   * User selector
+
+                                                   * Workflow selector
+
+                                                   * Assignment date
+
+                                                   * Due date (optional)
+
+                                                   * Assign CTA
+
+Result
+                                                      * User instantly sees tasks in their dashboard
+
+________________
+
+
+5.5 Employee / Vendor Dashboard
+Purpose
+Task-focused, zero clutter.
+Layout
+Top
+                                                         * Assigned Workflow Name
+
+                                                         * Progress bar (e.g., 60% complete)
+
+Task List
+                                                            * Task name
+
+                                                            * Status (Pending / Completed)
+
+                                                            * Due date (if any)
+
+                                                            * Upload button (if document required)
+
+________________
+
+
+5.6 Task Completion & Document Upload
+Task View
+Components
+                                                               * Task title
+
+                                                               * Instructions
+
+                                                               * Upload area (drag & drop)
+
+                                                               * File type validation
+
+                                                               * Submit button
+
+UX Rules
+                                                                  * Clear success/failure feedback
+
+                                                                  * Cannot mark completed without required doc
+
+________________
+
+
+5.7 Document Management Screen
+Purpose
+Centralized document visibility.
+Components
+                                                                     * Table view:
+
+                                                                        * User
+
+                                                                        * Workflow
+
+                                                                        * Task
+
+                                                                        * Document name
+
+                                                                        * Upload date
+
+                                                                           * Download / View action
+
+________________
+
+
+5.8 Reports & Progress View (Admin)
+Purpose
+Track onboarding completion.
+Components
+                                                                              * Progress table
+
+                                                                              * Completion percentage
+
+                                                                              * Export buttons:
+
+                                                                                 * CSV
+
+                                                                                 * PDF (mock)
+
+________________
+
+
+6. UI Components Library (MVP)
+Reusable Components
+                                                                                    * Buttons (Primary / Secondary / Danger)
+
+                                                                                    * Input fields
+
+                                                                                    * Progress bars
+
+                                                                                    * Status badges
+
+                                                                                    * Cards
+
+                                                                                    * Tables
+
+                                                                                    * Modal dialogs
+
+                                                                                    * Toast notifications
+
+Consistency is critical.
+________________
+
+
+7. Responsive Design Considerations
+Web (Primary)
+                                                                                       * Desktop-first
+
+                                                                                       * Tablet-friendly
+
+Mobile (MVP-lite)
+                                                                                          * View tasks
+
+                                                                                          * Upload documents
+
+                                                                                          * Check progress
+
+(Admin features desktop-only for MVP)
+________________
+
+
+8. Accessibility & Usability
+                                                                                             * High contrast text
+
+                                                                                             * Clear labels
+
+                                                                                             * Keyboard navigable forms
+
+                                                                                             * Simple language (enterprise users)
+
+________________
+
+
+9. Design-to-Development Handoff Notes
+This design supports:
+                                                                                                * React / Angular / Vue frontend
+
+                                                                                                * REST API backend
+
+                                                                                                * Role-based routing
+
+                                                                                                * Scalable component reuse
+
+________________
+
+
+10. Future Enhancements (Term 2 – Design Ready)
+                                                                                                   * Candidate Tracker UI
+
+                                                                                                   * Vendor contracts dashboard
+
+                                                                                                   * Notifications panel
+
+                                                                                                   * Workflow branching
+
+                                                                                                   * External HR system mock integration
+
+                                                                                                   * Audit logs
+
+________________
+
+
+11. Final Notes
+This Design Document ensures:
+                                                                                                      * Alignment with PRD
+
+                                                                                                      * Safe MVP scope
+
+                                                                                                      * Clear dev guidance
+
+                                                                                                      * Low risk for Term 1
+
+                                                                                                      * Strong foundation for Term 2 expansion
