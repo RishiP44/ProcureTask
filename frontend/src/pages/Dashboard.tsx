@@ -9,7 +9,7 @@ const Dashboard = () => {
     useEffect(() => {
         const fetchAssignments = async () => {
             try {
-                const endpoint = user?.role === 'Admin' || user?.role === 'HR' // Providing the role details for Admmin Dashboard
+                const endpoint = user?.role === 'Admin' || user?.role === 'HR' // Providing the role 
                     ? '/assignments'
                     : '/assignments/my-assignments';
 
