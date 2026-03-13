@@ -9,7 +9,7 @@ const Dashboard = () => {
     useEffect(() => {
         const fetchAssignments = async () => {
             try {
-                const endpoint = user?.role === 'Admin' || user?.role === 'HR'
+                const endpoint = user?.role === 'Admin' || user?.role === 'HR' // Providing the role details for Admmin Dashboard
                     ? '/assignments'
                     : '/assignments/my-assignments';
 
@@ -18,7 +18,7 @@ const Dashboard = () => {
             } catch (error) {
                 console.error('Failed to fetch assignments', error);
             }
-        };
+        }; 
         fetchAssignments();
     }, [user]);
 
