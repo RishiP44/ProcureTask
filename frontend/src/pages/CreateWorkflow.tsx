@@ -26,7 +26,7 @@ const CreateWorkflow = () => {
         setTasks(newTasks);
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => { // This will create a new workflow
         e.preventDefault();
         try {
             await api.post('/workflows', { name, description, tasks });
