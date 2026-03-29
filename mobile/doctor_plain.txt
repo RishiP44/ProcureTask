@@ -1,0 +1,47 @@
+Running 17 checks on your project...
+14/17 checks passed. 3 checks failed. Possible issues detected:
+Use the --verbose flag to see more details about passed checks.
+
+✖ Check for issues with Metro config
+- "watchFolders" does not contain all entries from Expo's defaults
+Advice:
+Modifying the "metro.config.js" is dangerous and may lead to unintended consequences.
+Unless you know what these overrides do, remove them and adopt the recommended values from "expo/metro-config".
+
+✖ Check that no duplicate dependencies are installed
+Your project contains duplicate native module dependencies, which should be de-duplicated.
+Native builds may only contain one version of any given native module, and having multiple versions of a single Native module installed may lead to unexpected build errors.
+Found duplicates for expo-constants:
+  ├─ expo-constants@55.0.9 (at: ..\node_modules\expo-constants)
+  ├─ expo-constants@18.0.13 (at: ..\node_modules\expo\node_modules\expo-constants)
+  └─ expo-constants@18.0.13 (at: ..\node_modules\expo-asset\node_modules\expo-constants)
+Advice:
+Resolve your dependency issues and deduplicate your dependencies. Learn more: https://expo.fyi/resolving-dependency-issues
+
+✖ Check that packages match versions required by installed Expo SDK
+
+❗ Major version mismatches
+package                                    expected  found   
+@react-native-async-storage/async-storage  2.2.0     3.0.1   
+expo-constants                             ~18.0.13  55.0.9  
+expo-linking                               ~8.0.11   55.0.8  
+expo-status-bar                            ~3.0.9    55.0.4  
+
+⚠️ Minor version mismatches
+package                                    expected  found   
+react                                      19.1.0    19.2.4  
+react-native                               0.81.5    0.84.1  
+react-native-reanimated                    ~4.1.1    4.2.3   
+react-native-safe-area-context             ~5.6.0    5.7.0   
+react-native-screens                       ~4.16.0   4.24.0  
+
+Changelogs:
+- expo-constants → https://github.com/expo/expo/blob/sdk-54/packages/expo-constants/CHANGELOG.md
+- expo-linking → https://github.com/expo/expo/blob/sdk-54/packages/expo-linking/CHANGELOG.md
+- expo-status-bar → https://github.com/expo/expo/blob/sdk-54/packages/expo-status-bar/CHANGELOG.md
+
+9 packages out of date.
+Advice:
+Use 'npx expo install --check' to review and upgrade your dependencies.
+To ignore specific packages, add them to "expo.install.exclude" in package.json. Learn more: https://expo.fyi/dependency-validation
+
