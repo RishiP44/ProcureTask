@@ -1,11 +1,11 @@
 import React, { ReactNode } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SharedAuthProvider, useSharedAuth, User } from '@procuretrack/shared';
 
-// Platform-specific storage implementation for Web
 const storage = {
-    getItem: (key: string) => localStorage.getItem(key),
-    setItem: (key: string, value: string) => localStorage.setItem(key, value),
-    removeItem: (key: string) => localStorage.removeItem(key)
+    getItem: async (key: string) => await AsyncStorage.getItem(key),
+    setItem: async (key: string, value: string) => await AsyncStorage.setItem(key, value),
+    removeItem: async (key: string) => await AsyncStorage.removeItem(key)
 };
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
