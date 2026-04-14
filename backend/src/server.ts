@@ -3,6 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
+import path from 'path';
 
 dotenv.config();
 
@@ -24,7 +25,8 @@ import assignmentRoutes from './routes/assignmentRoutes';
 import userRoutes from './routes/userRoutes';
 import uploadRoutes from './routes/uploadRoutes';
 import documentRoutes from './routes/documentRoutes';
-import path from 'path';
+import offerLetterRoutes from './routes/offerLetterRoutes';
+import notificationRoutes from './routes/notificationRoutes';
 
 app.use('/api/auth', authRoutes);
 app.use('/api/workflows', workflowRoutes);
@@ -32,8 +34,10 @@ app.use('/api/assignments', assignmentRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/documents', documentRoutes);
+app.use('/api/offer-letters', offerLetterRoutes);
+app.use('/api/notifications', notificationRoutes);
 
-// Make uploads folder static
+// Static uploads
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Database Connection
@@ -45,12 +49,11 @@ if (process.env.NODE_ENV !== 'test') {
         .catch((err) => console.error('❌ MongoDB Connection Error:', err));
 }
 
-// Basic Route
+// Health check
 app.get('/', (req: Request, res: Response) => {
-    res.send('ProcureTrack API is running');
+    res.send('ProcureTask API is running');
 });
 
-// Start Server
 app.listen(PORT, () => {
     console.log(`🚀 Server running on port ${PORT}`);
 });

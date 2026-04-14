@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, FlatList, ActivityIndicator, SafeAreaView, Modal, TextInput, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, FlatList, ActivityIndicator, SafeAreaView, Modal, TextInput, Alert, KeyboardAvoidingView, Platform, StatusBar } from 'react-native';
+import { Feather } from '@expo/vector-icons';
 import api from '../services/api';
 
 const Workflows = () => {
@@ -16,7 +17,7 @@ const Workflows = () => {
         try {
             setLoading(true);
             const res = await api.get('/workflows');
-            setWorkflows(res.data);
+            setWorkflows(Array.isArray(res.data) ? res.data : []);
         } catch (error) {
             console.error('Failed to fetch workflows', error);
         } finally {
@@ -40,97 +41,129 @@ const Workflows = () => {
             setNewDesc('');
             setTasks([{ name: '', type: 'checkbox', required: true }]);
             fetchWorkflows();
-            Alert.alert('Success', 'Workflow created successfully.');
+            Alert.alert('Success', 'Workflow template created!');
         } catch (error) {
             Alert.alert('Error', 'Failed to create workflow.');
         }
     };
 
     const renderItem = ({ item }: { item: any }) => (
-        <View className="bg-white p-5 mb-4 rounded-xl border border-gray-200 shadow-sm">
-            <Text className="text-lg font-bold text-gray-900 mb-1">{item.name}</Text>
-            <Text className="text-gray-500 text-sm mb-4" numberOfLines={2}>{item.description}</Text>
-            <View className="flex-row justify-between items-center pt-4 border-t border-gray-50">
-                <Text className="text-[10px] font-bold text-indigo-600 uppercase tracking-widest">{item.tasks?.length || 0} Tasks</Text>
-                <Text className="text-[10px] text-gray-400 font-medium">Created: {new Date(item.createdAt).toLocaleDateString()}</Text>
+        <TouchableOpacity 
+            activeOpacity={0.8}
+            className="bg-white p-5 mb-2 rounded-lg border border-gray-100 flex-row items-center justify-between"
+        >
+            <View className="flex-1">
+                <Text className="text-sm font-bold text-gray-900 uppercase tracking-tight">{item.name}</Text>
+                <Text className="text-[10px] text-gray-400 font-bold uppercase mt-1">
+                    {item.tasks?.length || 0} Steps • {item.description ? 'Template Active' : 'No description'}
+                </Text>
             </View>
-        </View>
+            <View className="px-2 py-1 bg-gray-50 rounded">
+                <Text className="text-[9px] font-bold text-gray-400 uppercase">View</Text>
+            </View>
+        </TouchableOpacity>
     );
 
     return (
-        <SafeAreaView className="flex-1 bg-gray-50">
-            <FlatList
-                data={workflows}
-                keyExtractor={(item) => item._id}
-                renderItem={renderItem}
-                ListHeaderComponent={
-                    <View className="px-4 pt-6 pb-4">
-                        <View className="flex-row justify-between items-center mb-6">
-                            <Text className="text-2xl font-bold text-gray-900">Workflows</Text>
-                            <TouchableOpacity 
-                                onPress={() => setShowCreateModal(true)}
-                                className="bg-indigo-600 px-4 py-2 rounded-lg"
-                            >
-                                <Text className="text-white text-sm font-bold">New Workflow</Text>
-                            </TouchableOpacity>
+        <SafeAreaView className="flex-1 bg-white">
+            <StatusBar barStyle="dark-content" />
+            <View className="flex-1 px-5">
+                <FlatList
+                    data={workflows}
+                    keyExtractor={(item) => item._id}
+                    renderItem={renderItem}
+                    contentContainerStyle={{ paddingBottom: 80 }}
+                    showsVerticalScrollIndicator={false}
+                    ListHeaderComponent={
+                        <View className="pt-8 pb-4">
+                            <View className="flex-row justify-between items-center mb-10">
+                                <View>
+                                    <Text className="text-2xl font-bold text-gray-900 tracking-tight">Workflows</Text>
+                                    <Text className="text-[10px] text-gray-400 font-bold uppercase mt-1 tracking-widest">Process Templates</Text>
+                                </View>
+                                <TouchableOpacity 
+                                    onPress={() => setShowCreateModal(true)}
+                                    className="px-4 py-2 bg-gray-900 rounded"
+                                >
+                                    <Text className="text-white font-bold text-[10px] uppercase tracking-widest">Create</Text>
+                                </TouchableOpacity>
+                            </View>
                         </View>
-                    </View>
-                }
-                ListEmptyComponent={
-                    <View className="mx-4 p-8 bg-white rounded-xl border border-gray-100 items-center">
-                        <Text className="text-gray-400 text-sm font-medium">No workflows found.</Text>
-                    </View>
-                }
-                onRefresh={fetchWorkflows}
-                refreshing={loading}
-                contentContainerStyle={{ paddingBottom: 100 }}
-                showsVerticalScrollIndicator={false}
-            />
+                    }
+                    ListEmptyComponent={
+                        <View className="p-10 bg-white rounded-lg items-center border border-gray-100 mt-4">
+                            <Text className="text-gray-400 text-sm">No templates found.</Text>
+                        </View>
+                    }
+                    onRefresh={fetchWorkflows}
+                    refreshing={loading}
+                />
+            </View>
 
-            {/* Create Modal - Simple Matching */}
+            {/* Create Modal */}
             <Modal visible={showCreateModal} animationType="slide">
                 <SafeAreaView className="flex-1 bg-white">
                     <KeyboardAvoidingView 
                         behavior={Platform.OS === 'ios' ? 'padding' : 'height'} 
-                        className="flex-1 px-4"
+                        className="flex-1 px-6"
                     >
-                        <View className="py-6 flex-row justify-between items-center border-b border-gray-100">
-                            <Text className="text-xl font-bold text-gray-900">Create Workflow</Text>
+                        <View className="pt-6 pb-6 flex-row justify-between items-center border-b border-gray-50">
+                            <Text className="text-sm font-bold text-gray-900 uppercase tracking-widest">New template</Text>
                             <TouchableOpacity onPress={() => setShowCreateModal(false)}>
-                                <Text className="text-gray-400 font-bold">Cancel</Text>
+                                <Text className="text-gray-400 font-bold text-[10px] uppercase tracking-widest">Close</Text>
                             </TouchableOpacity>
                         </View>
                         
-                        <ScrollView className="mt-6">
-                            <Text className="text-sm font-bold text-gray-700 mb-2">Workflow Name</Text>
-                            <TextInput
-                                className="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-4 text-sm"
-                                placeholder="E.g., HR Onboarding"
-                                value={newName}
-                                onChangeText={setNewName}
-                            />
+                        <ScrollView showsVerticalScrollIndicator={false} className="mt-8">
+                            <View className="mb-6">
+                                <Text className="text-gray-400 font-bold text-[10px] mb-2 uppercase tracking-widest">Template Name</Text>
+                                <TextInput
+                                    className="bg-gray-50 px-4 py-3 rounded border border-gray-100 text-sm font-medium text-gray-900"
+                                    placeholder="e.g. Employee Offboarding"
+                                    placeholderTextColor="#9CA3AF"
+                                    value={newName}
+                                    onChangeText={setNewName}
+                                />
+                            </View>
 
-                            <Text className="text-sm font-bold text-gray-700 mb-2">Description</Text>
-                            <TextInput
-                                className="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-4 text-sm"
-                                placeholder="Workflow description..."
-                                value={newDesc}
-                                onChangeText={setNewDesc}
-                                multiline
-                            />
+                            <View className="mb-8">
+                                <Text className="text-gray-400 font-bold text-[10px] mb-2 uppercase tracking-widest">Description</Text>
+                                <TextInput
+                                    className="bg-gray-50 px-4 py-3 rounded border border-gray-100 text-sm font-medium text-gray-900 min-h-[80px]"
+                                    placeholder="Short description..."
+                                    placeholderTextColor="#9CA3AF"
+                                    value={newDesc}
+                                    onChangeText={setNewDesc}
+                                    multiline
+                                    textAlignVertical="top"
+                                />
+                            </View>
 
-                            <View className="flex-row justify-between items-center mt-4 mb-4">
-                                <Text className="text-lg font-bold text-gray-900">Tasks</Text>
-                                <TouchableOpacity onPress={() => setTasks([...tasks, { name: '', type: 'checkbox', required: true }])}>
-                                    <Text className="text-indigo-600 font-bold">+ Add Task</Text>
+                            <View className="flex-row justify-between items-center mb-6">
+                                <Text className="text-xs font-bold text-gray-900 uppercase tracking-widest">Tasks</Text>
+                                <TouchableOpacity 
+                                    onPress={() => setTasks([...tasks, { name: '', type: 'checkbox', required: true }])}
+                                >
+                                    <Text className="text-gray-900 font-bold text-[10px] uppercase tracking-widest">+ Add Step</Text>
                                 </TouchableOpacity>
                             </View>
 
                             {tasks.map((task, idx) => (
-                                <View key={idx} className="bg-gray-50 p-4 rounded-lg border border-gray-100 mb-4">
+                                <View key={idx} className="bg-white p-4 rounded border border-gray-100 mb-4">
+                                    <View className="flex-row justify-between items-center mb-4">
+                                        <Text className="text-[9px] font-bold text-gray-300 uppercase tracking-widest">Step {idx + 1}</Text>
+                                        {tasks.length > 1 && (
+                                            <TouchableOpacity onPress={() => {
+                                                const nt = tasks.filter((_, i) => i !== idx);
+                                                setTasks(nt);
+                                            }}>
+                                                <Text className="text-red-400 text-[9px] font-bold uppercase tracking-widest">Remove</Text>
+                                            </TouchableOpacity>
+                                        )}
+                                    </View>
                                     <TextInput
-                                        className="text-sm font-bold text-gray-900 border-b border-gray-200 pb-2 mb-3"
-                                        placeholder={`Task ${idx + 1} Name`}
+                                        className="text-sm font-bold text-gray-900 border-b border-gray-50 pb-2 mb-4"
+                                        placeholder="Task description..."
                                         value={task.name}
                                         onChangeText={(v) => {
                                             const nt = [...tasks];
@@ -138,16 +171,16 @@ const Workflows = () => {
                                             setTasks(nt);
                                         }}
                                     />
-                                    <View className="flex-row gap-4">
+                                    <View className="flex-row gap-2">
                                         <TouchableOpacity 
                                             onPress={() => {
                                                 const nt = [...tasks];
                                                 nt[idx].type = 'checkbox';
                                                 setTasks(nt);
                                             }}
-                                            className={`px-3 py-1.5 rounded-full ${task.type === 'checkbox' ? 'bg-indigo-600' : 'bg-white border border-gray-200'}`}
+                                            className={`px-3 py-1.5 rounded ${task.type === 'checkbox' ? 'bg-gray-900' : 'bg-gray-50'}`}
                                         >
-                                            <Text className={`text-[10px] font-bold ${task.type === 'checkbox' ? 'text-white' : 'text-gray-500'}`}>Checkbox</Text>
+                                            <Text className={`text-[9px] font-bold uppercase ${task.type === 'checkbox' ? 'text-white' : 'text-gray-400'}`}>Checkbox</Text>
                                         </TouchableOpacity>
                                         <TouchableOpacity 
                                             onPress={() => {
@@ -155,9 +188,9 @@ const Workflows = () => {
                                                 nt[idx].type = 'document';
                                                 setTasks(nt);
                                             }}
-                                            className={`px-3 py-1.5 rounded-full ${task.type === 'document' ? 'bg-indigo-600' : 'bg-white border border-gray-200'}`}
+                                            className={`px-3 py-1.5 rounded ${task.type === 'document' ? 'bg-gray-900' : 'bg-gray-50'}`}
                                         >
-                                            <Text className={`text-[10px] font-bold ${task.type === 'document' ? 'text-white' : 'text-gray-500'}`}>Document</Text>
+                                            <Text className={`text-[9px] font-bold uppercase ${task.type === 'document' ? 'text-white' : 'text-gray-400'}`}>Upload</Text>
                                         </TouchableOpacity>
                                     </View>
                                 </View>
@@ -165,9 +198,9 @@ const Workflows = () => {
 
                             <TouchableOpacity 
                                 onPress={handleCreateWorkflow}
-                                className="bg-indigo-600 p-4 rounded-xl items-center mt-6 shadow-sm"
+                                className="bg-gray-900 py-4 rounded items-center mt-6 mb-10"
                             >
-                                <Text className="text-white font-bold text-base">Save Workflow Template</Text>
+                                <Text className="text-white font-bold text-[10px] uppercase tracking-widest">Save template</Text>
                             </TouchableOpacity>
                         </ScrollView>
                     </KeyboardAvoidingView>

@@ -53,3 +53,42 @@ export const getWorkflowById = async (req: Request, res: Response) => {
         res.status(500).json({ message: 'Server Error', error });
     }
 };
+// @desc    Update a workflow template
+// @route   PUT /api/workflows/:id
+// @access  Private (Admin/HR)
+export const updateWorkflow = async (req: Request, res: Response) => {
+    try {
+        const { name, description, tasks } = req.body;
+        const workflow = await Workflow.findById(req.params.id);
+
+        if (!workflow) {
+            return res.status(404).json({ message: 'Workflow not found' });
+        }
+
+        workflow.name = name || workflow.name;
+        workflow.description = description || workflow.description;
+        if (tasks) workflow.tasks = tasks;
+
+        await workflow.save();
+        res.json(workflow);
+    } catch (error) {
+        res.status(500).json({ message: 'Server Error', error });
+    }
+};
+
+// @desc    Delete a workflow template
+// @route   DELETE /api/workflows/:id
+// @access  Private (Admin/HR)
+export const deleteWorkflow = async (req: Request, res: Response) => {
+    try {
+        const workflow = await Workflow.findById(req.params.id);
+        if (!workflow) {
+            return res.status(404).json({ message: 'Workflow not found' });
+        }
+
+        await workflow.deleteOne();
+        res.json({ message: 'Workflow template removed' });
+    } catch (error) {
+        res.status(500).json({ message: 'Server Error', error });
+    }
+};
