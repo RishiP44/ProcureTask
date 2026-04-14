@@ -1,5 +1,5 @@
 import express from 'express';
-import { assignWorkflow, getMyAssignments, getAllAssignments, updateTaskStatus } from '../controllers/assignmentController';
+import { assignWorkflow, getMyAssignments, getAllAssignments, updateTaskStatus, getAssignmentById } from '../controllers/assignmentController';
 import { protect, authorize } from '../middleware/authMiddleware';
 
 const router = express.Router();
@@ -9,7 +9,7 @@ router.route('/')
     .get(protect, authorize('Admin', 'HR'), getAllAssignments);
 
 router.get('/my-assignments', protect, getMyAssignments);
-
+router.get('/:id', protect, getAssignmentById);
 router.put('/:id/tasks/:taskId', protect, updateTaskStatus);
 
 export default router;
