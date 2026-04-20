@@ -1,22 +1,17 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
+import { motion } from 'framer-motion';
+import { 
+    ResponsiveContainer, PieChart, Pie, Cell, Tooltip 
+} from 'recharts';
 import {
-    Users, ClipboardList, CheckCircle2, Clock, TrendingUp,
-    ArrowRight, AlertCircle, UserPlus, Workflow, Eye
+    Users, Clock, Activity, ShieldCheck, SendHorizontal, BarChart3,
+    ChevronRight
 } from 'lucide-react';
 
-const getInitials = (name: string) => name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || '?';
-
-const StatusBadge = ({ status }: { status: string }) => {
-    const map: Record<string, string> = {
-        completed: 'pt-badge-green',
-        in_progress: 'pt-badge-blue',
-        pending: 'pt-badge-yellow',
-    };
-    return <span className={map[status] || 'pt-badge-gray'}>{status.replace('_', ' ')}</span>;
-};
+const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444'];
 
 const Dashboard = () => {
     const { user } = useAuth();
@@ -44,147 +39,229 @@ const Dashboard = () => {
             }
         };
         fetchData();
-    }, [user]);
+    }, [user, isHR]);
 
     const pending = assignments.filter(a => a.status === 'pending').length;
     const inProgress = assignments.filter(a => a.status === 'in_progress').length;
     const completed = assignments.filter(a => a.status === 'completed').length;
-    const completionRate = assignments.length > 0
-        ? Math.round((completed / assignments.length) * 100)
-        : 0;
+    const total = assignments.length;
+
+    const chartData = [
+        { name: 'Pending', value: pending },
+        { name: 'In Progress', value: inProgress },
+        { name: 'Completed', value: completed },
+    ].filter(d => d.value > 0);
+
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        show: {
+            opacity: 1,
+            transition: { staggerChildren: 0.1 }
+        }
+    };
+
+    const itemVariants = {
+        hidden: { opacity: 0, y: 20 },
+        show: { opacity: 1, y: 0 }
+    };
 
     if (loading) {
         return (
-            <div>
-                <div className="pt-page-header">
-                    <div>
-                        <div className="pt-skeleton h-8 w-48 mb-2" />
-                        <div className="pt-skeleton h-4 w-64" />
-                    </div>
+            <div className="space-y-8">
+                <div className="h-20 w-64 pt-skeleton" />
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    {[1,2,3,4].map(i => <div key={i} className="h-32 pt-skeleton" />)}
                 </div>
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8 stagger">
-                    {[1,2,3,4].map(i => <div key={i} className="pt-skeleton h-32 animate-fade-in-up" />)}
-                </div>
-                <div className="pt-skeleton h-80 animate-fade-in-up" />
+                <div className="h-96 pt-skeleton" />
             </div>
         );
     }
 
     return (
-        <div className="animate-fade-in-up">
-            {/* Page Header */}
-            <div className="mb-12 border-b border-slate-100 pb-8 flex justify-between items-end">
+        <motion.div 
+            variants={containerVariants}
+            initial="hidden"
+            animate="show"
+            className="space-y-12 pb-20"
+        >
+            {/* Header */}
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
-                    <h1 className="text-4xl font-bold text-slate-900 tracking-tighter" style={{ fontFamily: 'Outfit, sans-serif' }}>
-                        Dashboard
-                    </h1>
-                    <p className="text-slate-400 text-[11px] font-bold uppercase mt-2 tracking-widest">
-                        Welcome, {user?.name}
-                    </p>
+                    <h2 className="text-[10px] font-extrabold text-blue-500 uppercase tracking-[0.3em] mb-2">Systems Overview</h2>
+                    <h1 className="text-4xl pt-title-gradient pt-outfit">Performance Dashboard</h1>
+                    <p className="text-slate-400 text-sm mt-3 font-medium">Monitoring active onboarding workflows for <span className="text-slate-900 font-bold">{user?.name}</span></p>
                 </div>
                 {isHR && (
-                    <div className="flex items-center gap-4">
-                        <Link to="/employees" className="px-6 py-3 bg-slate-900 text-white text-[11px] font-bold rounded uppercase tracking-widest hover:bg-black transition-all">
-                            Employees
+                    <div className="flex items-center gap-3">
+                        <Link to="/employees" className="pt-btn-primary">
+                            Staff Directory
                         </Link>
-                        <Link to="/assign" className="px-6 py-3 border border-slate-200 text-slate-900 text-[11px] font-bold rounded uppercase tracking-widest hover:bg-slate-50 transition-all">
-                            Assign Task
+                        <Link to="/assign" className="pt-btn-accent">
+                            <SendHorizontal className="w-3.5 h-3.5" />
+                            Initiate Flow
                         </Link>
                     </div>
                 )}
             </div>
 
-            {/* Stats Grid */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+            {/* Main Stats */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {isHR && hrStats && (
-                    <div className="p-8 bg-white rounded border border-slate-100">
-                        <span className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Total Employees</span>
-                        <div className="text-4xl font-bold text-slate-900 mt-2 tracking-tighter" style={{ fontFamily: 'Outfit, sans-serif' }}>{hrStats.total}</div>
-                        <div className="text-slate-300 text-[10px] mt-1 uppercase font-bold tracking-widest">{hrStats.active} Active</div>
-                    </div>
+                    <motion.div variants={itemVariants} className="pt-glass-card p-6 border-l-4 border-l-slate-900">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="p-2 bg-slate-50 rounded-lg text-slate-600"><Users className="w-5 h-5" /></div>
+                            <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Total Staff</span>
+                        </div>
+                        <div className="text-3xl font-black text-slate-900 pt-outfit">{hrStats.total}</div>
+                        <p className="text-[10px] font-bold text-emerald-500 uppercase mt-2">{hrStats.active} Active Profiles</p>
+                    </motion.div>
                 )}
-
-                <div className="p-8 bg-white rounded border border-slate-100">
-                    <span className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Pending</span>
-                    <div className="text-4xl font-bold text-slate-900 mt-2 tracking-tighter" style={{ fontFamily: 'Outfit, sans-serif' }}>{pending}</div>
-                </div>
-
-                <div className="p-8 bg-white rounded border border-slate-100">
-                    <span className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">In Progress</span>
-                    <div className="text-4xl font-bold text-slate-900 mt-2 tracking-tighter" style={{ fontFamily: 'Outfit, sans-serif' }}>{inProgress}</div>
-                </div>
-
-                <div className="p-8 bg-white rounded border border-slate-100">
-                    <span className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Completed</span>
-                    <div className="text-4xl font-bold text-slate-900 mt-2 tracking-tighter" style={{ fontFamily: 'Outfit, sans-serif' }}>{completionRate}%</div>
-                </div>
+                <motion.div variants={itemVariants} className="pt-glass-card p-6 border-l-4 border-l-amber-400">
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="p-2 bg-amber-50 rounded-lg text-amber-600"><Clock className="w-5 h-5" /></div>
+                        <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Pending</span>
+                    </div>
+                    <div className="text-3xl font-black text-slate-900 pt-outfit">{pending}</div>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase mt-2">Awaiting Action</p>
+                </motion.div>
+                <motion.div variants={itemVariants} className="pt-glass-card p-6 border-l-4 border-l-blue-500">
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="p-2 bg-blue-50 rounded-lg text-blue-600"><Activity className="w-5 h-5" /></div>
+                        <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Active</span>
+                    </div>
+                    <div className="text-3xl font-black text-slate-900 pt-outfit">{inProgress}</div>
+                    <p className="text-[10px] font-bold text-blue-500 uppercase mt-2">In Progress</p>
+                </motion.div>
+                <motion.div variants={itemVariants} className="pt-glass-card p-6 border-l-4 border-l-emerald-500">
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="p-2 bg-emerald-50 rounded-lg text-emerald-600"><ShieldCheck className="w-5 h-5" /></div>
+                        <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Reliability</span>
+                    </div>
+                    <div className="text-3xl font-black text-slate-900 pt-outfit">{total > 0 ? Math.round((completed/total)*100) : 0}%</div>
+                    <p className="text-[10px] font-bold text-emerald-500 uppercase mt-2">Completion Rate</p>
+                </motion.div>
             </div>
 
-            {/* Recent Assignments Table */}
-            <div>
-                <div className="flex items-center justify-between mb-8">
-                    <h2 className="text-xs font-bold text-blue-900 uppercase tracking-[0.2em]">
-                        {isHR ? 'System Activity Log' : 'Personal Task List'}
-                    </h2>
-                </div>
+            {/* Charts Section */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <motion.div variants={itemVariants} className="lg:col-span-1 pt-glass-card p-8">
+                    <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-widest mb-8 flex items-center gap-2">
+                        <BarChart3 className="w-3.5 h-3.5 text-blue-600" />
+                        Status Distribution
+                    </h3>
+                    <div className="h-[240px] w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                                <Pie
+                                    data={chartData}
+                                    innerRadius={60}
+                                    outerRadius={80}
+                                    paddingAngle={8}
+                                    dataKey="value"
+                                    stroke="none"
+                                >
+                                    {chartData.map((_, index) => (
+                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                    ))}
+                                </Pie>
+                                <Tooltip 
+                                    contentStyle={{ 
+                                        borderRadius: '12px', 
+                                        border: 'none', 
+                                        boxShadow: '0 10px 30px rgba(0,0,0,0.1)',
+                                        fontSize: '12px',
+                                        fontWeight: 'bold'
+                                    }} 
+                                />
+                            </PieChart>
+                        </ResponsiveContainer>
+                    </div>
+                    <div className="mt-6 space-y-3">
+                        {chartData.map((d, i) => (
+                            <div key={d.name} className="flex items-center justify-between border-b border-slate-50 pb-2">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-2 h-2 rounded-full" style={{ background: COLORS[i] }} />
+                                    <span className="text-[10px] font-bold text-slate-500 uppercase">{d.name}</span>
+                                </div>
+                                <span className="text-[11px] font-black text-slate-900">{d.value}</span>
+                            </div>
+                        ))}
+                    </div>
+                </motion.div>
 
-                <div className="overflow-x-auto bg-white border border-blue-100 rounded">
-                    <table className="w-full text-left">
-                        <thead>
-                            <tr className="bg-blue-50/50">
-                                {isHR && <th className="px-6 py-4 text-[10px] font-bold text-blue-400 uppercase tracking-widest border-b border-blue-100">Staff</th>}
-                                <th className="px-6 py-4 text-[10px] font-bold text-blue-400 uppercase tracking-widest border-b border-blue-100">Workflow</th>
-                                <th className="px-6 py-4 text-[10px] font-bold text-blue-400 uppercase tracking-widest border-b border-blue-100">Status</th>
-                                <th className="px-6 py-4 text-[10px] font-bold text-blue-400 uppercase tracking-widest border-b border-blue-100">Initiated</th>
-                                <th className="px-6 py-4 text-[10px] font-bold text-blue-400 uppercase tracking-widest border-b border-blue-100 text-right">Reference</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-blue-50">
-                            {assignments.slice(0, 10).map(a => {
-                                const pct = Math.round(((a.tasks?.filter((t: any) => t.status === 'completed').length || 0) / (a.tasks?.length || 1)) * 100);
-                                return (
-                                    <tr key={a._id} className="hover:bg-blue-50/30 transition-colors">
-                                        {isHR && (
-                                            <td className="px-6 py-5">
-                                                <div className="text-sm font-bold text-blue-950">{a.user?.name}</div>
-                                                <div className="text-[10px] text-blue-400 uppercase font-semibold">{a.user?.role}</div>
+                <motion.div variants={itemVariants} className="lg:col-span-2 pt-glass-card flex flex-col">
+                    <div className="p-8 border-b border-slate-50 flex items-center justify-between bg-slate-50/30">
+                        <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
+                            <Activity className="w-3.5 h-3.5 text-blue-600" />
+                            {isHR ? 'Enterprise Activity Feed' : 'My Current Obligations'}
+                        </h3>
+                    </div>
+                    <div className="flex-1 overflow-x-auto">
+                        <table className="w-full">
+                            <thead>
+                                <tr className="border-b border-slate-50">
+                                    {isHR && <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-left">Staff</th>}
+                                    <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-left">Workflow</th>
+                                    <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-left">Progress</th>
+                                    <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-left text-right">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-50">
+                                {assignments.slice(0, 5).map(a => {
+                                    const pct = Math.round(((a.tasks?.filter((t: any) => t.status === 'completed').length || 0) / (a.tasks?.length || 1)) * 100);
+                                    return (
+                                        <tr key={a._id} className="hover:bg-slate-50/50 transition-colors group">
+                                            {isHR && (
+                                                <td className="px-8 py-5">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-7 h-7 bg-slate-100 rounded-full flex items-center justify-center text-[10px] font-bold text-slate-600">{a.user?.name?.charAt(0)}</div>
+                                                        <div>
+                                                            <div className="text-xs font-black text-slate-900 uppercase">{a.user?.name}</div>
+                                                            <div className="text-[9px] text-slate-400 font-bold uppercase">{a.user?.role}</div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                            )}
+                                            <td className="px-8 py-5">
+                                                <div className="text-xs font-bold text-slate-800 uppercase tracking-tight">{a.workflow?.name}</div>
                                             </td>
-                                        )}
-                                        <td className="px-6 py-5">
-                                            <div className="text-sm font-bold text-blue-950">{a.workflow?.name}</div>
-                                            <div className="text-[10px] text-blue-400 uppercase font-semibold">{pct}% Complete</div>
-                                        </td>
-                                        <td className="px-6 py-5">
-                                            <span className={`text-[10px] font-bold uppercase px-2 py-1 rounded border ${a.status === 'completed' ? 'border-green-200 bg-green-50 text-green-700' : 'border-blue-200 bg-blue-50 text-blue-700'}`}>
-                                                {a.status.replace('_', ' ')}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-5 text-[10px] font-bold text-blue-400 uppercase">
-                                            {new Date(a.createdAt).toLocaleDateString()}
-                                        </td>
-                                        <td className="px-6 py-5 text-right">
-                                            <button 
-                                                onClick={() => navigate(`/assignments/${a._id}`)}
-                                                className="text-[10px] font-bold text-blue-700 uppercase hover:text-blue-900 underline underline-offset-4"
-                                            >
-                                                Details
-                                            </button>
+                                            <td className="px-8 py-5">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden w-24">
+                                                        <div className="h-full bg-blue-500 rounded-full" style={{ width: `${pct}%` }} />
+                                                    </div>
+                                                    <span className="text-[10px] font-black text-slate-400 uppercase">{pct}%</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-8 py-5 text-right">
+                                                <button 
+                                                    onClick={() => navigate(`/assignments/${a._id}`)}
+                                                    className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                                                >
+                                                    <ChevronRight className="w-5 h-5" />
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                                {assignments.length === 0 && (
+                                    <tr>
+                                        <td colSpan={isHR ? 4 : 3} className="py-20 text-center text-slate-300 text-[10px] font-black uppercase tracking-widest">
+                                            No active streams detected.
                                         </td>
                                     </tr>
-                                );
-                            })}
-                            {assignments.length === 0 && (
-                                <tr>
-                                    <td colSpan={isHR ? 5 : 4} className="py-20 text-center text-blue-300 text-[10px] font-bold uppercase tracking-widest">
-                                        Records empty.
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
-                </div>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                    {assignments.length > 5 && (
+                        <div className="p-4 border-t border-slate-50 bg-slate-50/10 text-center">
+                            <button className="text-[10px] font-black text-blue-600 uppercase tracking-widest hover:underline">View Entire Registry</button>
+                        </div>
+                    )}
+                </motion.div>
             </div>
-        </div>
+        </motion.div>
     );
 };
 

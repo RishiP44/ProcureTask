@@ -1,4 +1,4 @@
-import React, { ReactNode } from 'react';
+import { ReactNode } from 'react';
 import { SharedAuthProvider, useSharedAuth, User } from '@procuretrack/shared';
 
 // Platform-specific storage implementation for Web

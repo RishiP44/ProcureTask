@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import toast from 'react-hot-toast';
@@ -40,11 +40,11 @@ const OfferLetterAccept = () => {
         setSubmitting(true);
         try {
             const res = await api.post(`/offer-letters/${token}/respond`, {
-                action: responseAction,
+                action: responseAction === 'accept' ? 'accepted' : 'declined',
                 name: candidateName,
                 password: responseAction === 'accept' ? password : undefined,
             });
-            setResult({ type: responseAction, userData: res.data.user });
+            setResult({ type: responseAction === 'accept' ? 'accepted' : 'declined', userData: res.data.user });
             setAction('done');
             if (responseAction === 'accept') {
                 toast.success('Offer accepted! Account created 🎉');

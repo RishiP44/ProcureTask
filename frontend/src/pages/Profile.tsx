@@ -1,17 +1,13 @@
-import React, { useEffect, useState } from 'react';
-import { useAuth } from '../context/AuthContext';
+import { useEffect, useState } from 'react';
 import api from '../services/api';
 import toast from 'react-hot-toast';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
-    User, Mail, Phone, Building2, Briefcase, Calendar,
-    Edit2, Check, X, Loader2, Camera, Shield
+    Edit2, Check, Loader2, Camera, Shield, 
+    Fingerprint, Activity
 } from 'lucide-react';
 
-const getInitials = (name: string) =>
-    name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || '?';
-
 const Profile = () => {
-    const { user, login } = useAuth();
     const [profile, setProfile] = useState<any>(null);
     const [editMode, setEditMode] = useState(false);
     const [editData, setEditData] = useState<any>({});
@@ -24,7 +20,7 @@ const Profile = () => {
                 const res = await api.get('/auth/me');
                 setProfile(res.data);
                 setEditData(res.data);
-            } catch { toast.error('Failed to load profile'); }
+            } catch { toast.error('Encrypted channel handshake failed'); }
             finally { setLoading(false); }
         };
         fetch();
@@ -41,92 +37,167 @@ const Profile = () => {
             });
             setProfile(res.data);
             setEditMode(false);
-            toast.success('Profile updated!');
-        } catch { toast.error('Update failed'); }
+            toast.success('Registry record updated');
+        } catch { toast.error('Biometric update rejected'); }
         finally { setSaving(false); }
     };
 
     if (loading) return (
-        <div className="animate-pulse max-w-2xl mx-auto space-y-4">
-            <div className="pt-skeleton h-48 rounded-2xl" />
-            <div className="pt-skeleton h-64 rounded-2xl" />
+        <div className="max-w-4xl mx-auto space-y-8">
+            <div className="h-64 pt-skeleton rounded-3xl" />
+            <div className="h-96 pt-skeleton rounded-3xl" />
         </div>
     );
 
     if (!profile) return null;
 
     return (
-        <div className="animate-fade-in-up max-w-2xl mx-auto">
-            <div className="mb-10 flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold text-slate-900 tracking-tight">My Profile</h1>
-                    <p className="text-slate-500 text-sm mt-1">Information and account settings</p>
+        <div className="animate-fade-in max-w-4xl mx-auto pb-20">
+            {/* Header & Coverage */}
+            <div className="relative mb-32">
+                <div className="h-48 w-full bg-gradient-to-r from-slate-900 via-blue-900 to-indigo-950 rounded-[40px] shadow-2xl overflow-hidden">
+                    <div className="absolute inset-0 opacity-20 flex flex-wrap gap-4 p-8">
+                        {[...Array(20)].map((_, i) => <Shield key={i} className="w-8 h-8 text-white rotate-12" />)}
+                    </div>
                 </div>
-                {!editMode ? (
-                    <button onClick={() => setEditMode(true)} className="px-4 py-2 border border-slate-200 text-slate-900 text-xs font-bold rounded-md uppercase tracking-wider">
-                        Edit Profile
-                    </button>
-                ) : (
-                    <div className="flex gap-2">
-                        <button onClick={() => { setEditMode(false); setEditData(profile); }} className="px-4 py-2 border border-slate-200 text-slate-900 text-xs font-bold rounded-md uppercase tracking-wider">
-                            Cancel
-                        </button>
-                        <button onClick={handleSave} disabled={saving} className="px-4 py-2 bg-slate-900 text-white text-xs font-bold rounded-md uppercase tracking-wider">
-                            {saving ? 'Saving...' : 'Save Changes'}
-                        </button>
-                    </div>
-                )}
-            </div>
 
-            {/* Basic Info */}
-            <div className="p-8 bg-white border border-gray-100 rounded-lg mb-6">
-                <div className="text-2xl font-bold text-slate-900 mb-1">{profile.name}</div>
-                <div className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{profile.position || profile.role}</div>
-                <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-8">
-                    <div>
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">Email Address</span>
-                        <div className="text-sm font-medium text-slate-900">{profile.email}</div>
-                    </div>
-                    <div>
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">Phone Number</span>
-                        {editMode ? (
-                            <input className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded text-sm" 
-                                value={editData.phone || ''} onChange={e => setEditData({ ...editData, phone: e.target.value })} />
-                        ) : (
-                            <div className="text-sm font-medium text-slate-900">{profile.phone || '—'}</div>
-                        )}
-                    </div>
-                    <div>
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">Department</span>
-                        {editMode ? (
-                            <input className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded text-sm" 
-                                value={editData.department || ''} onChange={e => setEditData({ ...editData, department: e.target.value })} />
-                        ) : (
-                            <div className="text-sm font-medium text-slate-900">{profile.department || '—'}</div>
-                        )}
-                    </div>
-                    <div>
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">Member Since</span>
-                        <div className="text-sm font-medium text-slate-900">
-                            {profile.createdAt ? new Date(profile.createdAt).toLocaleDateString() : '—'}
+                <div className="absolute -bottom-20 left-12 flex flex-col md:flex-row md:items-end gap-8">
+                    <div className="relative group">
+                        <div className="w-40 h-40 rounded-[40px] bg-white p-2 shadow-2xl">
+                            <div className="w-full h-full rounded-[32px] bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-5xl font-black pt-outfit ring-4 ring-white/20">
+                                {profile.name?.charAt(0)}
+                            </div>
                         </div>
+                        <button className="absolute bottom-2 right-2 p-3 bg-white text-slate-900 rounded-2xl shadow-xl hover:bg-slate-50 transition-all">
+                            <Camera className="w-5 h-5" />
+                        </button>
                     </div>
+
+                    <div className="pb-4">
+                        <h2 className="text-[10px] font-black text-blue-500 uppercase tracking-[0.4em] mb-2 drop-shadow-sm">Personal Identity Hub</h2>
+                        <h1 className="text-4xl font-black text-slate-900 pt-outfit">{profile.name}</h1>
+                        <p className="text-slate-400 text-sm font-bold uppercase tracking-widest mt-1">
+                            {profile.position || 'Strategic Operations'} • {profile.department || 'Global Hub'}
+                        </p>
+                    </div>
+                </div>
+
+                <div className="absolute -bottom-10 right-12">
+                    <AnimatePresence mode="wait">
+                        {!editMode ? (
+                            <motion.button 
+                                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                                onClick={() => setEditMode(true)} 
+                                className="pt-btn-primary px-8 py-4 shadow-xl shadow-blue-600/20"
+                            >
+                                <Edit2 className="w-4 h-4" />
+                                Modify Identity
+                            </motion.button>
+                        ) : (
+                            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex gap-3">
+                                <button onClick={() => { setEditMode(false); setEditData(profile); }} className="pt-btn-secondary px-6">Cancel</button>
+                                <button onClick={handleSave} disabled={saving} className="pt-btn-accent px-8 shadow-xl shadow-blue-400/20">
+                                    {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                                    Commite Changes
+                                </button>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                 </div>
             </div>
 
-            {/* Role/Status */}
-            <div className="p-8 bg-white border border-gray-100 rounded-lg">
-                <div className="flex items-center gap-12">
-                    <div>
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">System Role</span>
-                        <div className="text-xs font-bold text-blue-700 bg-blue-50 px-2 py-1 rounded uppercase tracking-wider inline-block">
-                            {profile.role}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Left: Quick Stats */}
+                <div className="space-y-6">
+                    <div className="pt-glass-card p-8">
+                        <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-widest mb-8 flex items-center gap-2">
+                            <Shield className="w-3.5 h-3.5 text-blue-600" />
+                            Security Clearance
+                        </h3>
+                        <div className="space-y-6">
+                            <div className="flex items-center justify-between">
+                                <span className="text-[10px] font-bold text-slate-400 uppercase">System Role</span>
+                                <span className="px-3 py-1 bg-slate-900 text-white text-[9px] font-black uppercase rounded-lg tracking-widest">{profile.role}</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <span className="text-[10px] font-bold text-slate-400 uppercase">Registry Status</span>
+                                <span className="px-3 py-1 bg-emerald-100 text-emerald-700 text-[9px] font-black uppercase rounded-lg tracking-widest">{profile.status}</span>
+                            </div>
+                            <div className="flex items-center justify-between pt-6 border-t border-slate-50">
+                                <span className="text-[10px] font-bold text-slate-400 uppercase">Identity ID</span>
+                                <span className="text-[10px] font-black text-slate-900 uppercase font-mono">{profile._id.slice(-8)}</span>
+                            </div>
                         </div>
                     </div>
-                    <div>
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">Account Status</span>
-                        <div className="text-xs font-bold text-green-700 bg-green-50 px-2 py-1 rounded uppercase tracking-wider inline-block">
-                            {profile.status}
+
+                    <div className="pt-glass-card p-8 bg-gradient-to-br from-blue-600 to-indigo-700 border-none">
+                        <div className="flex items-center justify-between mb-8">
+                            <Activity className="w-6 h-6 text-white" />
+                            <span className="text-[10px] font-black text-white/60 uppercase tracking-widest">Live Uptime</span>
+                        </div>
+                        <div className="text-white text-xs font-bold leading-relaxed">
+                            Your account is synchronized with the global ProcureTrack network. All actions are logged and verified.
+                        </div>
+                    </div>
+                </div>
+
+                {/* Right: Info Form */}
+                <div className="lg:col-span-2 pt-glass-card p-10">
+                    <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-widest mb-10 flex items-center gap-2">
+                        <Fingerprint className="w-4 h-4 text-blue-600" />
+                        Biometric Data & Identity Settings
+                    </h3>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
+                        <div className="space-y-2">
+                            <label className="pt-label text-slate-400">Full Legal Name</label>
+                            {editMode ? (
+                                <input className="pt-input" value={editData.name || ''} onChange={e => setEditData({ ...editData, name: e.target.value })} />
+                            ) : (
+                                <div className="text-sm font-black text-slate-900 pt-outfit uppercase tracking-tight py-2 border-b border-transparent">{profile.name}</div>
+                            )}
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="pt-label text-slate-400">System Link (Email)</label>
+                            <div className="text-sm font-black text-slate-400 pt-outfit uppercase tracking-tight py-2 border-b border-transparent opacity-60 flex items-center gap-2">
+                                {profile.email}
+                                <Shield className="w-3 h-3" />
+                            </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="pt-label text-slate-400">Primary Endpoint (Phone)</label>
+                            {editMode ? (
+                                <input className="pt-input" value={editData.phone || ''} onChange={e => setEditData({ ...editData, phone: e.target.value })} />
+                            ) : (
+                                <div className="text-sm font-black text-slate-900 pt-outfit uppercase tracking-tight py-2 border-b border-transparent">{profile.phone || 'Not Configured'}</div>
+                            )}
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="pt-label text-slate-400">Departmental Node</label>
+                            {editMode ? (
+                                <input className="pt-input" value={editData.department || ''} onChange={e => setEditData({ ...editData, department: e.target.value })} />
+                            ) : (
+                                <div className="text-sm font-black text-slate-900 pt-outfit uppercase tracking-tight py-2 border-b border-transparent">{profile.department || 'General Cloud'}</div>
+                            )}
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="pt-label text-slate-400">Registry Activation</label>
+                            <div className="text-sm font-black text-slate-900 pt-outfit uppercase tracking-tight py-2 border-b border-transparent">
+                                {new Date(profile.createdAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                            </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="pt-label text-slate-400">Functional Positioning</label>
+                            {editMode ? (
+                                <input className="pt-input" value={editData.position || ''} onChange={e => setEditData({ ...editData, position: e.target.value })} />
+                            ) : (
+                                <div className="text-sm font-black text-slate-900 pt-outfit uppercase tracking-tight py-2 border-b border-transparent">{profile.position || 'Executive Member'}</div>
+                            )}
                         </div>
                     </div>
                 </div>

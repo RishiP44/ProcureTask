@@ -1,351 +1,173 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useParams, Link } from 'react-router-dom';
 import api from '../services/api';
 import toast from 'react-hot-toast';
 import {
-    ArrowLeft, Mail, Phone, Building2, Calendar, Briefcase,
-    ClipboardList, Edit2, Check, X, Loader2, UserCheck,
-    Shield, Clock, CheckCircle2, AlertCircle, Plus
+    Mail, Phone, Building2, Briefcase, Calendar,
+    Shield, Activity, Globe, Zap, Target
 } from 'lucide-react';
-
-const getInitials = (name: string) =>
-    name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || '?';
-
-const StatusBadge = ({ status }: { status: string }) => {
-    const map: Record<string, string> = {
-        completed: 'pt-badge-green', in_progress: 'pt-badge-blue', pending: 'pt-badge-yellow',
-        Active: 'pt-badge-green', Invited: 'pt-badge-blue', Inactive: 'pt-badge-gray',
-    };
-    return <span className={map[status] || 'pt-badge-gray'}>{status.replace('_', ' ')}</span>;
-};
 
 const EmployeeProfile = () => {
     const { id } = useParams();
-    const navigate = useNavigate();
-    const [employee, setEmployee] = useState<any>(null);
-    const [assignments, setAssignments] = useState<any[]>([]);
-    const [workflows, setWorkflows] = useState<any[]>([]);
+    const [profile, setProfile] = useState<any>(null);
     const [loading, setLoading] = useState(true);
-    const [editMode, setEditMode] = useState(false);
-    const [editData, setEditData] = useState<any>({});
-    const [saving, setSaving] = useState(false);
-    const [assigning, setAssigning] = useState(false);
-    const [selectedWorkflow, setSelectedWorkflow] = useState('');
-    const [showAssignPanel, setShowAssignPanel] = useState(false);
-    const [activeTab, setActiveTab] = useState<'overview' | 'tasks' | 'activity'>('overview');
 
     useEffect(() => {
-        const load = async () => {
+        const fetch = async () => {
             try {
-                const [empRes, assignRes, wfRes] = await Promise.all([
-                    api.get(`/users/${id}`),
-                    api.get(`/assignments?userId=${id}`),
-                    api.get('/workflows'),
-                ]);
-                setEmployee(empRes.data);
-                setEditData(empRes.data);
-                setAssignments(assignRes.data);
-                setWorkflows(wfRes.data);
-            } catch { toast.error('Failed to load employee'); }
+                const res = await api.get(`/users/${id}`);
+                setProfile(res.data);
+            } catch { toast.error('Personnel record inaccessible'); }
             finally { setLoading(false); }
         };
-        load();
+        fetch();
     }, [id]);
 
-    const handleSave = async () => {
-        setSaving(true);
-        try {
-            const res = await api.put(`/users/${id}`, {
-                name: editData.name,
-                department: editData.department,
-                position: editData.position,
-                phone: editData.phone,
-                role: editData.role,
-                status: editData.status,
-            });
-            setEmployee(res.data);
-            setEditMode(false);
-            toast.success('Profile updated!');
-        } catch { toast.error('Update failed'); }
-        finally { setSaving(false); }
-    };
-
-    const handleAssign = async () => {
-        if (!selectedWorkflow) return;
-        setAssigning(true);
-        try {
-            await api.post('/assignments', { userId: id, workflowId: selectedWorkflow });
-            toast.success('Workflow assigned!');
-            setShowAssignPanel(false);
-            setSelectedWorkflow('');
-            // Refresh assignments
-            const res = await api.get(`/assignments?userId=${id}`);
-            setAssignments(res.data);
-        } catch (err: any) {
-            toast.error(err.response?.data?.message || 'Assignment failed');
-        } finally { setAssigning(false); }
-    };
-
-    if (loading) {
-        return (
-            <div className="animate-pulse space-y-4">
-                <div className="pt-skeleton h-8 w-32" />
-                <div className="pt-skeleton h-64 rounded-2xl" />
-                <div className="pt-skeleton h-48 rounded-2xl" />
-            </div>
-        );
-    }
-
-    if (!employee) return (
-        <div className="text-center py-16">
-            <p className="text-slate-400">Employee not found</p>
-            <button onClick={() => navigate('/employees')} className="pt-btn-primary mt-4">Back to Employees</button>
+    if (loading) return (
+        <div className="max-w-4xl mx-auto space-y-8 animate-pulse">
+            <div className="h-64 pt-skeleton rounded-3xl" />
+            <div className="h-96 pt-skeleton rounded-3xl" />
         </div>
     );
 
-    const completedTasks = assignments.filter(a => a.status === 'completed').length;
-    const totalTasks = assignments.length;
+    if (!profile) return (
+        <div className="pt-glass-card p-20 text-center max-w-xl mx-auto mt-20">
+            <Shield className="w-12 h-12 text-slate-200 mx-auto mb-6" />
+            <h2 className="text-xl font-black text-slate-900 pt-outfit uppercase tracking-tight">Identity Not Found</h2>
+            <p className="text-slate-400 text-sm mt-3 font-medium">The requested personnel record does not exist or has been purged from the registry.</p>
+            <Link to="/employees" className="pt-btn-primary mt-8 inline-flex">Return to Directory</Link>
+        </div>
+    );
 
     return (
-        <div className="animate-fade-in-up max-w-5xl mx-auto">
-            {/* Back */}
-            <button onClick={() => navigate('/employees')}
-                className="flex items-center gap-2 text-sm text-slate-500 hover:text-slate-700 mb-6 font-medium transition-colors">
-                <ArrowLeft className="w-4 h-4" /> Back to Employees
-            </button>
+        <div className="animate-fade-in max-w-4xl mx-auto pb-20">
+            {/* Header / Banner */}
+            <div className="relative mb-32">
+                <div className="h-48 w-full bg-gradient-to-r from-slate-900 via-blue-900 to-indigo-950 rounded-[40px] shadow-2xl overflow-hidden">
+                    <div className="absolute inset-0 opacity-20 flex flex-wrap gap-4 p-8">
+                        {[...Array(20)].map((_, i) => <Globe key={i} className="w-8 h-8 text-white rotate-12" />)}
+                    </div>
+                </div>
 
-            {/* Profile Header Card */}
-            <div className="pt-card overflow-hidden mb-6">
-                {/* Banner */}
-                <div className="h-28 bg-gradient-to-r from-blue-700 via-blue-600 to-cyan-500" />
-                <div className="px-6 pb-6">
-                    <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 -mt-10">
-                        {/* Avatar */}
-                        <div className="flex items-end gap-4">
-                            <div className="w-20 h-20 rounded-2xl ring-4 ring-white bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-2xl font-bold flex-shrink-0">
-                                {employee.avatar
-                                    ? <img src={employee.avatar} alt="" className="w-full h-full object-cover rounded-2xl" />
-                                    : getInitials(employee.name)
-                                }
-                            </div>
-                            <div className="mb-1">
-                                {editMode ? (
-                                    <input className="pt-input text-xl font-bold"
-                                        value={editData.name} onChange={e => setEditData({ ...editData, name: e.target.value })} />
-                                ) : (
-                                    <h1 className="text-2xl font-bold text-slate-900">{employee.name}</h1>
-                                )}
-                                <p className="text-slate-500 text-sm mt-0.5">{employee.position || employee.role} {employee.department ? `· ${employee.department}` : ''}</p>
-                            </div>
-                        </div>
-
-                        {/* Actions */}
-                        <div className="flex items-center gap-2 sm:mb-1">
-                            <StatusBadge status={employee.status} />
-                            {!editMode ? (
-                                <>
-                                    <button onClick={() => setShowAssignPanel(!showAssignPanel)} className="pt-btn-primary">
-                                        <Plus className="w-4 h-4" /> Assign Task
-                                    </button>
-                                    <button onClick={() => setEditMode(true)} className="pt-btn-secondary">
-                                        <Edit2 className="w-4 h-4" /> Edit
-                                    </button>
-                                </>
-                            ) : (
-                                <>
-                                    <button onClick={() => setEditMode(false)} className="pt-btn-secondary">
-                                        <X className="w-4 h-4" /> Cancel
-                                    </button>
-                                    <button onClick={handleSave} disabled={saving} className="pt-btn-primary">
-                                        {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-                                        Save
-                                    </button>
-                                </>
-                            )}
+                <div className="absolute -bottom-20 left-12 flex flex-col md:flex-row md:items-end gap-8">
+                    <div className="w-40 h-40 rounded-[40px] bg-white p-2 shadow-2xl">
+                        <div className="w-full h-full rounded-[32px] bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-5xl font-black pt-outfit ring-4 ring-white/20">
+                            {profile.name?.charAt(0)}
                         </div>
                     </div>
 
-                    {/* Info Row */}
-                    <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm text-slate-500">
-                        <span className="flex items-center gap-1.5"><Mail className="w-4 h-4 text-slate-400" />{employee.email}</span>
-                        {employee.phone && <span className="flex items-center gap-1.5"><Phone className="w-4 h-4 text-slate-400" />{employee.phone}</span>}
-                        {employee.department && <span className="flex items-center gap-1.5"><Building2 className="w-4 h-4 text-slate-400" />{employee.department}</span>}
-                        {employee.startDate && (
-                            <span className="flex items-center gap-1.5">
-                                <Calendar className="w-4 h-4 text-slate-400" />
-                                Started {new Date(employee.startDate).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-                            </span>
-                        )}
+                    <div className="pb-4">
+                        <h2 className="text-[10px] font-black text-blue-500 uppercase tracking-[0.4em] mb-2 drop-shadow-sm">Personnel Profile</h2>
+                        <h1 className="text-4xl font-black text-slate-900 pt-outfit">{profile.name}</h1>
+                        <p className="text-slate-400 text-sm font-bold uppercase tracking-widest mt-1">
+                            {profile.position || 'Strategic Member'} • {profile.department || 'Cloud Operations'}
+                        </p>
                     </div>
                 </div>
             </div>
 
-            {/* Assign Workflow Panel */}
-            {showAssignPanel && (
-                <div className="pt-card p-5 mb-6 border-blue-200 bg-blue-50/50 animate-fade-in">
-                    <h3 className="font-semibold text-slate-900 mb-3">Assign Workflow to {employee.name}</h3>
-                    <div className="flex gap-3">
-                        <select className="pt-select flex-1" value={selectedWorkflow}
-                            onChange={e => setSelectedWorkflow(e.target.value)}>
-                            <option value="">Select a workflow…</option>
-                            {workflows.map((w: any) => (
-                                <option key={w._id} value={w._id}>{w.name}</option>
-                            ))}
-                        </select>
-                        <button onClick={handleAssign} disabled={!selectedWorkflow || assigning}
-                            className="pt-btn-primary flex-shrink-0">
-                            {assigning ? <Loader2 className="w-4 h-4 animate-spin" /> : <ClipboardList className="w-4 h-4" />}
-                            {assigning ? 'Assigning…' : 'Assign'}
-                        </button>
-                        <button onClick={() => setShowAssignPanel(false)} className="pt-btn-secondary flex-shrink-0">Cancel</button>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Stats & Identity */}
+                <div className="space-y-6">
+                    <div className="pt-glass-card p-8">
+                        <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-widest mb-8 flex items-center gap-2">
+                            <Activity className="w-3.5 h-3.5 text-blue-600" />
+                            Operational Metrics
+                        </h3>
+                        <div className="space-y-6">
+                            <div className="flex items-center justify-between">
+                                <span className="text-[10px] font-bold text-slate-400 uppercase">System Role</span>
+                                <span className="px-3 py-1 bg-slate-900 text-white text-[9px] font-black uppercase rounded-lg tracking-widest">{profile.role}</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <span className="text-[10px] font-bold text-slate-400 uppercase">Status</span>
+                                <span className={`px-3 py-1 text-[9px] font-black uppercase rounded-lg tracking-widest ${profile.status === 'active' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
+                                    {profile.status}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="pt-glass-card p-8 bg-gradient-to-br from-blue-600 to-indigo-700 border-none">
+                        <div className="flex items-center justify-between mb-8">
+                            <Zap className="w-6 h-6 text-white" />
+                            <span className="text-[10px] font-black text-white/60 uppercase tracking-widest">Network Node</span>
+                        </div>
+                        <div className="text-white text-xs font-bold leading-relaxed">
+                            This identity is verified and active on the global onboarding grid. All metrics are synced in real-time.
+                        </div>
                     </div>
                 </div>
-            )}
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Left Column */}
-                <div className="space-y-5">
-                    {/* Stats */}
-                    <div className="pt-card p-5">
-                        <h3 className="font-semibold text-slate-900 mb-4 text-sm">Task Summary</h3>
-                        <div className="space-y-3">
-                            <div className="flex justify-between items-center">
-                                <span className="text-sm text-slate-500 flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" /> Pending</span>
-                                <span className="font-bold text-amber-600">{assignments.filter(a => a.status === 'pending').length}</span>
-                            </div>
-                            <div className="flex justify-between items-center">
-                                <span className="text-sm text-slate-500 flex items-center gap-1.5"><AlertCircle className="w-3.5 h-3.5" /> In Progress</span>
-                                <span className="font-bold text-blue-600">{assignments.filter(a => a.status === 'in_progress').length}</span>
-                            </div>
-                            <div className="flex justify-between items-center">
-                                <span className="text-sm text-slate-500 flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5" /> Completed</span>
-                                <span className="font-bold text-emerald-600">{completedTasks}</span>
-                            </div>
-                            {totalTasks > 0 && (
-                                <div className="pt-4 border-t border-slate-100">
-                                    <div className="flex justify-between text-xs text-slate-500 mb-1.5">
-                                        <span>Overall progress</span>
-                                        <span>{Math.round((completedTasks / totalTasks) * 100)}%</span>
-                                    </div>
-                                    <div className="pt-progress-bar">
-                                        <div className="pt-progress-fill bg-emerald-500"
-                                            style={{ width: `${Math.round((completedTasks / totalTasks) * 100)}%` }} />
-                                    </div>
+                {/* Primary Info */}
+                <div className="lg:col-span-2 pt-glass-card p-10">
+                    <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-widest mb-10 flex items-center gap-2">
+                        <Target className="w-4 h-4 text-blue-600" />
+                        Professional Engagement Data
+                    </h3>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
+                        <div className="group">
+                            <label className="pt-label text-slate-400 mb-1 block">Full Legal Identity</label>
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-slate-50 rounded-lg group-hover:bg-blue-50 transition-colors">
+                                    <Mail className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-500" />
                                 </div>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Details (edit mode) */}
-                    <div className="pt-card p-5">
-                        <h3 className="font-semibold text-slate-900 mb-4 text-sm">Employment Details</h3>
-                        <div className="space-y-3">
-                            {editMode ? (
-                                <>
-                                    <div>
-                                        <label className="pt-label text-xs">Department</label>
-                                        <input className="pt-input" placeholder="e.g. Engineering"
-                                            value={editData.department || ''} onChange={e => setEditData({ ...editData, department: e.target.value })} />
-                                    </div>
-                                    <div>
-                                        <label className="pt-label text-xs">Position</label>
-                                        <input className="pt-input" placeholder="e.g. Software Engineer"
-                                            value={editData.position || ''} onChange={e => setEditData({ ...editData, position: e.target.value })} />
-                                    </div>
-                                    <div>
-                                        <label className="pt-label text-xs">Phone</label>
-                                        <input className="pt-input" placeholder="+1 555-0100"
-                                            value={editData.phone || ''} onChange={e => setEditData({ ...editData, phone: e.target.value })} />
-                                    </div>
-                                    <div>
-                                        <label className="pt-label text-xs">Role</label>
-                                        <select className="pt-select" value={editData.role}
-                                            onChange={e => setEditData({ ...editData, role: e.target.value })}>
-                                            <option value="Employee">Employee</option>
-                                            <option value="HR">HR Manager</option>
-                                            <option value="Admin">Admin</option>
-                                            <option value="Vendor">Vendor</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className="pt-label text-xs">Status</label>
-                                        <select className="pt-select" value={editData.status}
-                                            onChange={e => setEditData({ ...editData, status: e.target.value })}>
-                                            <option value="Active">Active</option>
-                                            <option value="Inactive">Inactive</option>
-                                            <option value="Pending">Pending</option>
-                                        </select>
-                                    </div>
-                                </>
-                            ) : (
-                                <>
-                                    {[
-                                        { icon: <Shield className="w-4 h-4" />, label: 'Role', value: employee.role },
-                                        { icon: <Building2 className="w-4 h-4" />, label: 'Department', value: employee.department || '—' },
-                                        { icon: <Briefcase className="w-4 h-4" />, label: 'Position', value: employee.position || '—' },
-                                        { icon: <Phone className="w-4 h-4" />, label: 'Phone', value: employee.phone || '—' },
-                                    ].map(item => (
-                                        <div key={item.label} className="flex items-center gap-2.5">
-                                            <span className="text-slate-400">{item.icon}</span>
-                                            <div>
-                                                <div className="text-xs text-slate-400">{item.label}</div>
-                                                <div className="text-sm font-medium text-slate-900">{item.value}</div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </>
-                            )}
-                        </div>
-                    </div>
-                </div>
-
-                {/* Right Column — Tasks */}
-                <div className="lg:col-span-2">
-                    <div className="pt-card overflow-hidden">
-                        <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
-                            <h3 className="font-semibold text-slate-900">Assigned Tasks ({assignments.length})</h3>
-                            <button onClick={() => setShowAssignPanel(true)} className="pt-btn-primary pt-btn-sm">
-                                <Plus className="w-3.5 h-3.5" /> Assign
-                            </button>
-                        </div>
-                        {assignments.length === 0 ? (
-                            <div className="py-12 text-center">
-                                <ClipboardList className="w-10 h-10 text-slate-200 mx-auto mb-3" />
-                                <p className="text-slate-400 text-sm font-medium">No tasks assigned yet</p>
-                                <button onClick={() => setShowAssignPanel(true)} className="pt-btn-primary pt-btn-sm mt-3">
-                                    Assign first task
-                                </button>
+                                <span className="text-sm font-black text-slate-900 pt-outfit uppercase tracking-tight">{profile.name}</span>
                             </div>
-                        ) : (
-                            <div className="divide-y divide-slate-50">
-                                {assignments.map((a: any) => {
-                                    const done = a.tasks?.filter((t: any) => t.status === 'completed').length || 0;
-                                    const total = a.tasks?.length || 1;
-                                    const pct = Math.round((done / total) * 100);
-                                    return (
-                                        <div key={a._id}
-                                            onClick={() => navigate(`/assignments/${a._id}`)}
-                                            className="px-5 py-4 hover:bg-slate-50 cursor-pointer transition-colors flex items-center gap-4">
-                                            <div className="flex-1 min-w-0">
-                                                <div className="flex items-center gap-2 mb-1">
-                                                    <span className="font-medium text-slate-900 text-sm truncate">{a.workflow?.name}</span>
-                                                    <StatusBadge status={a.status} />
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                    <div className="pt-progress-bar flex-1 max-w-[140px]">
-                                                        <div className="pt-progress-fill bg-blue-500" style={{ width: `${pct}%` }} />
-                                                    </div>
-                                                    <span className="text-xs text-slate-400">{done}/{total} tasks</span>
-                                                </div>
-                                            </div>
-                                            <div className="text-xs text-slate-400 flex-shrink-0">
-                                                {new Date(a.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                                            </div>
-                                        </div>
-                                    );
-                                })}
+                        </div>
+
+                        <div className="group">
+                            <label className="pt-label text-slate-400 mb-1 block">Primary Link</label>
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-slate-50 rounded-lg group-hover:bg-blue-50 transition-colors">
+                                    <Globe className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-500" />
+                                </div>
+                                <span className="text-sm font-black text-slate-900 pt-outfit tracking-tight">{profile.email}</span>
                             </div>
-                        )}
+                        </div>
+
+                        <div className="group">
+                            <label className="pt-label text-slate-400 mb-1 block">Departmental Node</label>
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-slate-100/50 rounded-lg">
+                                    <Building2 className="w-3.5 h-3.5 text-slate-400" />
+                                </div>
+                                <span className="text-sm font-black text-slate-900 pt-outfit uppercase tracking-tight">{profile.department || 'Unassigned'}</span>
+                            </div>
+                        </div>
+
+                        <div className="group">
+                            <label className="pt-label text-slate-400 mb-1 block">Functional Role</label>
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-slate-100/50 rounded-lg">
+                                    <Briefcase className="w-3.5 h-3.5 text-slate-400" />
+                                </div>
+                                <span className="text-sm font-black text-slate-900 pt-outfit uppercase tracking-tight">{profile.position || 'General Staff'}</span>
+                            </div>
+                        </div>
+
+                        <div className="group">
+                            <label className="pt-label text-slate-400 mb-1 block">Primary Endpoint</label>
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-slate-100/50 rounded-lg">
+                                    <Phone className="w-3.5 h-3.5 text-slate-400" />
+                                </div>
+                                <span className="text-sm font-black text-slate-900 pt-outfit uppercase tracking-tight">{profile.phone || 'Offline'}</span>
+                            </div>
+                        </div>
+
+                        <div className="group">
+                            <label className="pt-label text-slate-400 mb-1 block">Registry Since</label>
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-slate-100/50 rounded-lg">
+                                    <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                                </div>
+                                <span className="text-sm font-black text-slate-900 pt-outfit uppercase tracking-tight">
+                                    {new Date(profile.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                                </span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
