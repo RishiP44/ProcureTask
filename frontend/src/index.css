@@ -125,6 +125,38 @@ h1, h2, h3, .pt-outfit {
   @apply bg-slate-100 animate-pulse rounded;
 }
 
+/* ===== Responsive Responsive Adjustments ===== */
+@media (max-width: 1200px) {
+  :root {
+    --pt-sidebar-w: 220px;
+  }
+}
+
+@media (max-width: 1024px) {
+  :root {
+    --pt-sidebar-w: 80px; /* Mini Sidebar Mode */
+  }
+  .pt-sidebar-text { display: none; }
+  .pt-sidebar-item { justify-content: center; padding: 12px; }
+}
+
+@media (max-width: 768px) {
+  :root {
+    --pt-sidebar-w: 0px; /* Hide sidebar on mobile/small-tablet */
+  }
+  .pt-sidebar { display: none; }
+  .pt-main-content { padding-left: 0 !important; }
+  .pt-mobile-header { display: flex !important; }
+  
+  .pt-grid-cols-2 { grid-template-columns: 1fr !important; }
+  .pt-grid-cols-3 { grid-template-columns: 1fr !important; }
+  .pt-grid-cols-4 { grid-template-columns: 1fr !important; }
+}
+
+@media (min-width: 769px) {
+  .pt-mobile-header { display: none !important; }
+}
+
 /* Glass Background Layer */
 .glass-overlay {
   background: radial-gradient(circle at top right, rgba(59, 130, 246, 0.05), transparent),

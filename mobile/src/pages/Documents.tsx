@@ -1,79 +1,79 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, Linking, SafeAreaView, StatusBar } from 'react-native';
+import { View, Text, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import api from '../services/api';
+import { DataBlock, WebSectionHeader } from '../components/Theme';
 
 const Documents = () => {
-    const [documents, setDocuments] = useState<any[]>([]);
+    const [docs, setDocs] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
-    const fetchDocuments = async () => {
-        try {
-            setLoading(true);
-            const res = await api.get('/documents');
-            setDocuments(Array.isArray(res.data) ? res.data : []);
-        } catch (error) {
-            console.error('Failed to fetch documents', error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
     useEffect(() => {
-        fetchDocuments();
+        const load = async () => {
+            try {
+                const res = await api.get('/documents');
+                setDocs(res.data);
+            } catch (e) {
+                console.error(e);
+            } finally {
+                setLoading(false);
+            }
+        };
+        load();
     }, []);
 
-    const handleOpen = (doc: any) => {
-        // Fallback to local if no production URL provided
-        const url = `http://localhost:5000${doc.url}`;
-        Linking.openURL(url).catch(err => console.error("Couldn't load page", err));
-    };
-
-    const renderItem = ({ item }: { item: any }) => (
-        <TouchableOpacity 
-            activeOpacity={0.8}
-            onPress={() => handleOpen(item)}
-            className="bg-white p-4 mb-3 rounded-lg border border-gray-200 shadow-sm flex-row items-center"
-        >
-            <View className="w-10 h-10 rounded-md bg-gray-100 items-center justify-center mr-3 border border-gray-200">
-                <Feather name="file-text" size={18} color="#6b7280" />
-            </View>
-            <View className="flex-1 mr-4">
-                <Text className="text-sm font-bold text-gray-900" numberOfLines={1}>{item.fileName}</Text>
-                <Text className="text-[10px] text-gray-500 mt-0.5">
-                    {item.workflowName || 'General'} • {new Date(item.date).toLocaleDateString()}
-                </Text>
-            </View>
-            <Feather name="external-link" size={14} color="#9CA3AF" />
-        </TouchableOpacity>
-    );
-
     return (
-        <SafeAreaView className="flex-1 bg-gray-50">
-            <StatusBar barStyle="dark-content" />
-            <View className="flex-1 px-4">
-                <FlatList
-                    data={documents}
-                    keyExtractor={(item) => item._id}
-                    renderItem={renderItem}
-                    contentContainerStyle={{ paddingBottom: 80 }}
-                    showsVerticalScrollIndicator={false}
-                    ListHeaderComponent={
-                        <View className="pt-6 pb-4">
-                            <Text className="text-2xl font-bold text-gray-900 mb-6">Documents</Text>
-                        </View>
-                    }
+        <View style={styles.container}>
+            <WebSectionHeader title="Security Vault" count={docs.length} />
+
+            {loading ? (
+                <ActivityIndicator color="#2563eb" size="large" style={{ marginTop: 40 }} />
+            ) : (
+                <FlatList 
+                    data={docs}
+                    keyExtractor={item => item._id}
+                    renderItem={({ item }) => (
+                        <DataBlock>
+                            <View style={styles.row}>
+                                <View style={styles.iconBox}>
+                                    <Feather name="file-text" size={20} color="#64748b" />
+                                </View>
+                                <View style={{ flex: 1 }}>
+                                    <Text style={styles.name}>{item.originalName}</Text>
+                                    <Text style={styles.meta}>{(item.type || 'DOCUMENT').toUpperCase()} • {new Date(item.createdAt).toLocaleDateString()}</Text>
+                                </View>
+                                <Feather name="download" size={16} color="#94a3b8" />
+                            </View>
+                        </DataBlock>
+                    )}
                     ListEmptyComponent={
-                        <View className="p-10 bg-white rounded-lg items-center border border-gray-100 mt-4">
-                            <Text className="text-gray-400 text-sm">No documents found.</Text>
+                        <View style={{ padding: 40, alignItems: 'center' }}>
+                            <Text style={{ color: '#94a3b8', fontSize: 13 }}>No documents in vault.</Text>
                         </View>
                     }
-                    onRefresh={fetchDocuments}
-                    refreshing={loading}
+                    contentContainerStyle={{ paddingBottom: 40 }}
                 />
-            </View>
-        </SafeAreaView>
+            )}
+        </View>
     );
 };
+
+const styles = StyleSheet.create({
+    container: { flex: 1, padding: 20 },
+    row: { flexDirection: 'row', alignItems: 'center' },
+    iconBox: {
+        width: 44,
+        height: 44,
+        backgroundColor: '#f8fafc',
+        borderRadius: 4,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: 16,
+        borderWidth: 1,
+        borderColor: '#e2e8f0'
+    },
+    name: { fontSize: 14, fontWeight: '600', color: '#0f172a' },
+    meta: { fontSize: 11, color: '#94a3b8', marginTop: 2, fontWeight: '700' }
+});
 
 export default Documents;

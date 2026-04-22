@@ -1,11 +1,15 @@
 import axios, { AxiosInstance } from 'axios';
 
-export const createApi = (getToken: () => string | null): AxiosInstance => {
+export const createApi = (getToken: () => string | null | Promise<string | null>): AxiosInstance => {
     const api = axios.create();
-    api.interceptors.request.use((config) => {
-        const token = getToken();
-        if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
+    api.interceptors.request.use(async (config) => {
+        try {
+            const token = await getToken();
+            if (token) {
+                config.headers.Authorization = `Bearer ${token}`;
+            }
+        } catch (error) {
+            console.error('Auth token retrieval failed', error);
         }
         return config;
     });
