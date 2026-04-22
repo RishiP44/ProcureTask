@@ -3,20 +3,19 @@
   "version": "1.0.0",
   "description": "ProcureTrack Monorepo for Web, Mobile and Backend",
   "main": "index.js",
-  "workspaces": [
-    "frontend",
-    "mobile",
-    "shared"
-  ],
+  "workspaces": {
+    "packages": [
+      "frontend",
+      "shared"
+    ]
+  },
   "scripts": {
     "web": "npm run dev --workspace=frontend",
-    "android": "npm run android --workspace=mobile",
-    "ios": "npm run ios --workspace=mobile",
-    "mobile": "npm run start --workspace=mobile"
+    "android": "cd mobile && npx expo start --android",
+    "ios": "cd mobile && npx expo start --ios",
+    "mobile": "cd mobile && npx expo start --port 8099 --clear"
   },
-  "dependencies": {
-    "framer-motion": "^12.38.0"
-  },
+  "dependencies": {},
   "keywords": [],
   "author": "",
   "license": "ISC"

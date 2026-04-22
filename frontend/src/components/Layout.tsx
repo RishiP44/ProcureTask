@@ -99,7 +99,7 @@ const Layout = () => {
                                 <span className={isActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-900 transition-colors'}>
                                     {item.icon}
                                 </span>
-                                {item.name}
+                                <span className="pt-sidebar-text">{item.name}</span>
                                 {isActive && (
                                     <motion.div 
                                         layoutId="active-pill"
@@ -128,7 +128,10 @@ const Layout = () => {
     return (
         <div className="min-h-screen bg-[#f8fafc] flex">
             {/* Desktop Sidebar */}
-            <aside className="w-[260px] bg-white border-r border-slate-100 flex-shrink-0 hidden md:flex flex-col fixed h-full z-20">
+            <aside 
+                style={{ width: 'var(--pt-sidebar-w)' }}
+                className="bg-white border-r border-slate-100 flex-shrink-0 hidden md:flex flex-col fixed h-full z-20 transition-all duration-300"
+            >
                 <SidebarContent />
             </aside>
 
@@ -157,7 +160,10 @@ const Layout = () => {
             </AnimatePresence>
 
             {/* Main Content Area */}
-            <div className="flex-1 flex flex-col md:ml-[260px] min-h-screen">
+            <div 
+                style={{ marginLeft: 'var(--pt-sidebar-w)' }}
+                className="flex-1 flex flex-col min-h-screen transition-all duration-300"
+            >
                 <header className="sticky top-0 z-10 bg-white/70 backdrop-blur-xl border-b border-slate-100 px-8 h-20 flex items-center justify-between">
                     <div className="flex items-center gap-4">
                         <button onClick={() => setSidebarOpen(true)}

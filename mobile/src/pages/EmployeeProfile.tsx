@@ -1,21 +1,23 @@
 import React, { useEffect, useState } from 'react';
 import { Feather } from '@expo/vector-icons';
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Alert, SafeAreaView, Dimensions, StatusBar } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Alert, StyleSheet, StatusBar } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import api from '../services/api';
-
-const { width } = Dimensions.get('window');
+import { DataBlock, WebSectionHeader } from '../components/Theme';
 
 interface EmployeeProfileProps {
     employeeId: string;
     onBack: () => void;
+    onSelectAssignment: (id: string) => void;
 }
 
-const EmployeeProfile: React.FC<EmployeeProfileProps> = ({ employeeId, onBack }) => {
+const EmployeeProfile: React.FC<EmployeeProfileProps> = ({ employeeId, onBack, onSelectAssignment }) => {
     const [employee, setEmployee] = useState<any>(null);
     const [assignments, setAssignments] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
     const loadData = async () => {
+        if (!employeeId) return;
         try {
             setLoading(true);
             const [empRes, assignRes] = await Promise.all([
@@ -26,7 +28,7 @@ const EmployeeProfile: React.FC<EmployeeProfileProps> = ({ employeeId, onBack })
             setAssignments(Array.isArray(assignRes.data) ? assignRes.data : []);
         } catch (error) {
             console.error('Load employee error:', error);
-            Alert.alert('Error', 'Failed to load profile details.');
+            Alert.alert('Load State Error', 'Failed to synchronize with central employee ledger.');
         } finally {
             setLoading(false);
         }
@@ -38,96 +40,82 @@ const EmployeeProfile: React.FC<EmployeeProfileProps> = ({ employeeId, onBack })
 
     if (loading) {
         return (
-            <View className="flex-1 items-center justify-center bg-white">
-                <ActivityIndicator size="large" color="#4F46E5" />
-                <Text className="mt-4 text-gray-400 font-medium">Loading profile...</Text>
+            <View style={[styles.container, { alignItems: 'center', justifyContent: 'center' }]}>
+                <ActivityIndicator size="large" color="#475569" />
+                <Text style={{ fontSize: 10,  color: '#cbd5e1', fontWeight: 'bold', marginTop: 16 }}>DECRYPTING PROFILE...</Text>
             </View>
         );
     }
 
     if (!employee) return null;
 
-    const completedTasks = assignments.filter(a => a.status === 'completed').length;
-    const totalTasks = assignments.length;
-    const progress = totalTasks > 0 ? (completedTasks / totalTasks) : 0;
-
     return (
-        <SafeAreaView className="flex-1 bg-white">
+        <SafeAreaView style={styles.container}>
             <StatusBar barStyle="dark-content" />
-            <ScrollView showsVerticalScrollIndicator={false}>
-                {/* Header Section */}
-                <View className="px-6 py-6 border-b border-gray-50 flex-row items-center justify-between">
-                    <TouchableOpacity onPress={onBack}>
-                        <Text className="text-gray-900 font-bold text-xs uppercase tracking-widest">Back</Text>
-                    </TouchableOpacity>
-                    <Text className="text-sm font-bold text-gray-900 uppercase tracking-widest">Profile</Text>
-                    <View style={{ width: 40 }} />
+            
+            {/* Header */}
+            <View style={styles.header}>
+                <TouchableOpacity onPress={onBack} style={styles.iconBtn}>
+                    <Feather name="arrow-left" size={18} color="#1e293b" />
+                </TouchableOpacity>
+                <Text style={styles.headerText}>Resource File</Text>
+                <View style={[styles.iconBtn, { opacity: 0 }]} />
+            </View>
+
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 24 }}>
+                {/* Identity Card */}
+                <View style={styles.identityBox}>
+                    <View style={styles.avatar}>
+                        <Text style={styles.avatarText}>
+                            {(employee.name || 'U').split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)}
+                        </Text>
+                    </View>
+                    <Text style={styles.name}>{employee.name}</Text>
+                    <Text style={styles.role}>{(employee.role || 'MEMBER').toUpperCase()}</Text>
+                    <Text style={styles.idText}>ID: {(employee._id || '').slice(-6).toUpperCase()}</Text>
                 </View>
 
-                <View className="px-6 py-8">
-                    {/* Basic Info */}
-                    <View className="mb-10 items-center">
-                        <View className="w-24 h-24 rounded-lg bg-gray-50 items-center justify-center mb-6">
-                            <Text className="text-3xl font-bold text-gray-300">
-                                {employee.name?.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)}
-                            </Text>
-                        </View>
-                        <Text className="text-2xl font-bold text-gray-900 tracking-tight">{employee.name}</Text>
-                        <Text className="text-sm text-gray-400 font-bold uppercase mt-1 tracking-tight">{employee.position || employee.role}</Text>
-                        <Text className="text-[10px] text-gray-300 font-bold uppercase mt-0.5 tracking-tight">{employee.email}</Text>
-                        
-                        <View className="flex-row mt-8 gap-4">
-                            <TouchableOpacity className="bg-gray-900 px-8 py-2.5 rounded">
-                                <Text className="text-white font-bold text-[10px] uppercase tracking-widest">Edit</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity className="border border-gray-200 px-8 py-2.5 rounded">
-                                <Text className="text-gray-900 font-bold text-[10px] uppercase tracking-widest">Email</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-
-                    {/* Stats */}
-                    <View className="flex-row gap-4 mb-10">
-                        <View className="flex-1 bg-gray-50 p-4 rounded-lg">
-                            <Text className="text-gray-400 text-[10px] font-bold uppercase tracking-widest">Status</Text>
-                            <Text className="text-lg font-bold text-gray-900 mt-1 uppercase">{employee.status}</Text>
-                        </View>
-                        <View className="flex-1 bg-gray-50 p-4 rounded-lg">
-                            <Text className="text-gray-400 text-[10px] font-bold uppercase tracking-widest">Tasks</Text>
-                            <Text className="text-lg font-bold text-gray-900 mt-1">{assignments.length}</Text>
-                        </View>
-                    </View>
-
-                    {/* Workflows */}
-                    <Text className="text-[10px] font-bold text-gray-900 mb-4 uppercase tracking-widest">Workflows</Text>
-                    {assignments.length > 0 ? (
-                        assignments.map((item) => (
-                            <View 
-                                key={item._id} 
-                                className="p-4 mb-2 rounded-lg border border-gray-100 flex-row items-center justify-between"
-                            >
-                                <View className="flex-1">
-                                    <Text className="text-[11px] font-bold text-gray-900 uppercase tracking-tight" numberOfLines={1}>
-                                        {item.workflow?.name}
-                                    </Text>
-                                    <Text className="text-[10px] text-gray-400 font-bold uppercase mt-1">
-                                        {item.status.replace('_', ' ')}
-                                    </Text>
+                {/* Operations Section */}
+                <WebSectionHeader title="Operations Log" count={assignments.length} />
+                
+                {assignments.length > 0 ? (
+                    assignments.map((item) => (
+                        <TouchableOpacity key={item._id} onPress={() => onSelectAssignment(item._id)} activeOpacity={0.7}>
+                            <DataBlock>
+                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                    <View style={{ flex: 1 }}>
+                                        <Text style={{ fontSize: 14, fontWeight: '800', color: '#0f172a' }}>{item.workflow?.name}</Text>
+                                        <Text style={{ fontSize: 10, color: '#64748b', marginTop: 4, fontWeight: '700', textTransform: 'uppercase' }}>
+                                            Status: {item.status.replace('_', ' ')}
+                                        </Text>
+                                    </View>
+                                    <Feather name="chevron-right" size={16} color="#cbd5e1" />
                                 </View>
-                                <View className="px-2 py-1 bg-gray-50 rounded">
-                                    <Text className="text-[9px] font-bold text-gray-400 uppercase">Detail</Text>
-                                </View>
-                            </View>
-                        ))
-                    ) : (
-                        <View className="p-8 border-2 border-dashed border-gray-50 rounded-lg items-center">
-                            <Text className="text-gray-400 text-[10px] font-bold uppercase tracking-widest">No active tasks</Text>
-                        </View>
-                    )}
-                </View>
+                            </DataBlock>
+                        </TouchableOpacity>
+                    ))
+                ) : (
+                    <DataBlock style={{ alignItems: 'center', padding: 40 }}>
+                        <Feather name="layers" size={24} color="#cbd5e1" />
+                        <Text style={{ fontSize: 10, fontWeight: '800', color: '#94a3b8', textTransform: 'uppercase', marginTop: 16 }}>Zero active operations</Text>
+                    </DataBlock>
+                )}
             </ScrollView>
         </SafeAreaView>
     );
 };
+
+const styles = StyleSheet.create({
+    container: { flex: 1, backgroundColor: '#f8fafc' },
+    header: { paddingHorizontal: 20, paddingVertical: 14, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#e2e8f0', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+    iconBtn: { width: 36, height: 36, backgroundColor: '#f1f5f9', borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
+    headerText: { fontSize: 10, fontWeight: '900', color: '#0f172a', textTransform: 'uppercase', letterSpacing: 2 },
+    identityBox: { alignItems: 'center', marginBottom: 40 },
+    avatar: { width: 96, height: 96, borderRadius: 48, backgroundColor: '#0f172a', alignItems: 'center', justifyContent: 'center', marginBottom: 20 },
+    avatarText: { fontSize: 36, fontWeight: '900', color: 'white', letterSpacing: 2 },
+    name: { fontSize: 24, fontWeight: '800', color: '#0f172a', marginBottom: 8 },
+    role: { fontSize: 10, fontWeight: '800', color: '#3b82f6', letterSpacing: 2, marginBottom: 8 },
+    idText: { fontSize: 10, fontWeight: '800', color: '#94a3b8', textTransform: 'uppercase' }
+});
 
 export default EmployeeProfile;

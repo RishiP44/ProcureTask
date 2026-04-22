@@ -1,15 +1,11 @@
 import express from 'express';
-import { sendOfferLetter, getOfferLetterByToken, respondToOffer, getAllOfferLetters } from '../controllers/offerLetterController';
+import { getOfferLetters, createOfferLetter, updateOfferStatus } from '../controllers/offerLetterController';
 import { protect, authorize } from '../middleware/authMiddleware';
 
 const router = express.Router();
 
-// HR routes (protected)
-router.post('/', protect, authorize('Admin', 'HR'), sendOfferLetter);
-router.get('/', protect, authorize('Admin', 'HR'), getAllOfferLetters);
-
-// Public routes (for candidate)
-router.get('/:token', getOfferLetterByToken);
-router.post('/:token/respond', respondToOffer);
+router.get('/', protect, getOfferLetters);
+router.post('/', protect, authorize('Admin', 'HR'), createOfferLetter);
+router.put('/:id/status', protect, authorize('Admin', 'HR'), updateOfferStatus);
 
 export default router;

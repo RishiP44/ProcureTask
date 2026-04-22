@@ -1,12 +1,21 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, TextInput, TouchableOpacity, ActivityIndicator, Alert, SafeAreaView, StatusBar } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, RefreshControl, StatusBar, StyleSheet, Alert, Modal, TextInput } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import api from '../services/api';
+import { DataBlock, WebBadge, WebSectionHeader } from '../components/Theme';
 
 const OfferLetters = () => {
     const [offers, setOffers] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-    const [search, setSearch] = useState('');
+    
+    // Add Offer State
+    const [showModal, setShowModal] = useState(false);
+    const [newName, setNewName] = useState('');
+    const [newEmail, setNewEmail] = useState('');
+    const [newPosition, setNewPosition] = useState('');
+    const [newDepartment, setNewDepartment] = useState('');
+    const [submitting, setSubmitting] = useState(false);
 
     const fetchOffers = async () => {
         try {
@@ -15,7 +24,6 @@ const OfferLetters = () => {
             setOffers(Array.isArray(res.data) ? res.data : []);
         } catch (error) {
             console.error('Fetch offers error:', error);
-            Alert.alert('Error', 'Failed to load offer letters.');
         } finally {
             setLoading(false);
         }
@@ -25,94 +33,147 @@ const OfferLetters = () => {
         fetchOffers();
     }, []);
 
-    const filtered = offers.filter(o => 
-        o.candidate?.name?.toLowerCase().includes(search.toLowerCase()) ||
-        o.position?.toLowerCase().includes(search.toLowerCase()) ||
-        o.department?.toLowerCase().includes(search.toLowerCase())
-    );
+    const handleCreateOffer = async () => {
+        if (!newName || !newEmail || !newPosition || !newDepartment) {
+            Alert.alert('Validation Error', 'All fields are strictly required.');
+            return;
+        }
 
-    const getStatusConfig = (status: string) => {
-        switch (status?.toLowerCase()) {
-            case 'pending': return { bg: 'bg-yellow-50', text: 'text-yellow-600', icon: 'clock' };
-            case 'accepted': return { bg: 'bg-green-50', text: 'text-green-600', icon: 'check-circle' };
-            case 'declined': return { bg: 'bg-red-50', text: 'text-red-600', icon: 'x-circle' };
-            default: return { bg: 'bg-gray-50', text: 'text-gray-500', icon: 'help-circle' };
+        try {
+            setSubmitting(true);
+            await api.post('/offer-letters', {
+                candidate: { name: newName, email: newEmail },
+                position: newPosition,
+                department: newDepartment,
+                salary: 0,
+                status: 'pending'
+            });
+            setShowModal(false);
+            setNewName(''); setNewEmail(''); setNewPosition(''); setNewDepartment('');
+            fetchOffers();
+        } catch (e) {
+            Alert.alert('Dispatch Error', 'Failed to dispatch offer letter.');
+        } finally {
+            setSubmitting(false);
         }
     };
 
-    const renderItem = ({ item }: { item: any }) => {
-        const config = getStatusConfig(item.status);
-        return (
-            <TouchableOpacity 
-                activeOpacity={0.8}
-                className="bg-white p-4 mb-3 rounded-lg border border-gray-200 shadow-sm"
-            >
-                <View className="flex-row items-center justify-between mb-4">
-                    <View className="flex-1">
-                        <Text className="text-base font-bold text-gray-900">{item.candidate?.name}</Text>
-                        <Text className="text-xs text-gray-500">{item.position} • {item.department || 'General'}</Text>
+    const renderItem = ({ item }: { item: any }) => (
+        <TouchableOpacity activeOpacity={0.8} style={{ marginBottom: 16 }}>
+            <DataBlock>
+                <View style={styles.topRow}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <View style={styles.avatar}>
+                            <Text style={styles.avatarText}>
+                                {(item.candidate?.name || 'U').charAt(0).toUpperCase()}
+                            </Text>
+                        </View>
+                        <View>
+                            <Text style={styles.name}>{item.candidate?.name}</Text>
+                            <Text style={styles.email}>{item.candidate?.email}</Text>
+                        </View>
                     </View>
-                    <View className={`px-2 py-0.5 rounded-md ${config.bg}`}>
-                        <Text className={`text-[10px] font-bold uppercase ${config.text}`}>
-                            {item.status}
+                    <WebBadge status={item.status} />
+                </View>
+                
+                <View style={styles.footer}>
+                    <View>
+                        <Text style={styles.position}>{item.position}</Text>
+                        <Text style={styles.department}>{item.department}</Text>
+                    </View>
+                    <View style={{ alignItems: 'flex-end' }}>
+                        <Text style={styles.dateLabel}>DISPATCHED</Text>
+                        <Text style={styles.date}>
+                            {new Date(item.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                         </Text>
                     </View>
                 </View>
-                
-                <View className="flex-row items-center justify-between pt-3 border-t border-gray-100">
-                    <Text className="text-[10px] text-gray-400 font-bold uppercase">
-                        {new Date(item.createdAt).toLocaleDateString()}
-                    </Text>
-                    <TouchableOpacity className="bg-gray-100 px-3 py-1 rounded-md border border-gray-200">
-                        <Text className="text-gray-700 font-bold text-[10px] uppercase">Details</Text>
-                    </TouchableOpacity>
-                </View>
-            </TouchableOpacity>
-        );
-    };
+            </DataBlock>
+        </TouchableOpacity>
+    );
 
     return (
-        <SafeAreaView className="flex-1 bg-gray-50">
+        <SafeAreaView style={styles.container}>
             <StatusBar barStyle="dark-content" />
-            <View className="flex-1 px-4">
-                <View className="pt-6 pb-4">
-                    <Text className="text-2xl font-bold text-gray-900 mb-6">Offer Letters</Text>
-                    
-                    <View className="bg-white border border-gray-200 rounded-lg flex-row items-center px-4 py-2">
-                        <Feather name="search" size={18} color="#9CA3AF" />
-                        <TextInput
-                            className="flex-1 ml-3 h-10 text-gray-900 text-sm"
-                            placeholder="Search candidates..."
-                            placeholderTextColor="#9CA3AF"
-                            value={search}
-                            onChangeText={setSearch}
-                        />
+            <FlatList
+                data={offers}
+                keyExtractor={(item) => item._id}
+                renderItem={renderItem}
+                contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
+                refreshControl={<RefreshControl refreshing={loading} onRefresh={fetchOffers} tintColor="#2563eb" />}
+                ListHeaderComponent={
+                    <View style={{ paddingBottom: 24 }}>
+                        <Text style={styles.subtext}>Acquisition Channel</Text>
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <Text style={styles.title}>Proposals</Text>
+                            <TouchableOpacity style={styles.addBtn} onPress={() => setShowModal(true)}>
+                                <Feather name="plus" size={18} color="white" />
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                }
+                ListEmptyComponent={
+                    <DataBlock style={{ padding: 40, alignItems: 'center' }}>
+                        <Feather name="mail" size={32} color="#cbd5e1" />
+                        <Text style={styles.emptyText}>Zero outbound engagement</Text>
+                    </DataBlock>
+                }
+            />
+
+            <Modal visible={showModal} animationType="slide" transparent>
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalContent}>
+                        <View style={styles.modalHeader}>
+                            <Text style={styles.modalTitle}>Dispatch Proposal</Text>
+                            <TouchableOpacity onPress={() => setShowModal(false)} style={styles.closeBtn}>
+                                <Feather name="x" size={20} color="#64748b" />
+                            </TouchableOpacity>
+                        </View>
+                        <View style={{ padding: 24 }}>
+                            <Text style={styles.inputLabel}>Candidate Details</Text>
+                            <TextInput style={styles.input} placeholder="Candidate Name" value={newName} onChangeText={setNewName} />
+                            <TextInput style={styles.input} placeholder="Candidate Email" value={newEmail} onChangeText={setNewEmail} keyboardType="email-address" />
+                            
+                            <Text style={[styles.inputLabel, { marginTop: 16 }]}>Role Definition</Text>
+                            <TextInput style={styles.input} placeholder="Position Title" value={newPosition} onChangeText={setNewPosition} />
+                            <TextInput style={styles.input} placeholder="Department" value={newDepartment} onChangeText={setNewDepartment} />
+
+                            <TouchableOpacity style={styles.submitBtn} onPress={handleCreateOffer} disabled={submitting}>
+                                <Text style={styles.submitBtnText}>{submitting ? 'DISPATCHING...' : 'DISPATCH OFFER'}</Text>
+                            </TouchableOpacity>
+                        </View>
                     </View>
                 </View>
-
-                {loading && offers.length === 0 ? (
-                    <View className="flex-1 items-center justify-center">
-                        <ActivityIndicator size="large" color="#2563eb" />
-                    </View>
-                ) : (
-                    <FlatList
-                        data={filtered}
-                        keyExtractor={(item) => item._id}
-                        renderItem={renderItem}
-                        ListEmptyComponent={
-                            <View className="p-10 bg-white rounded-lg items-center border border-gray-100 mt-4">
-                                <Text className="text-gray-400 text-sm font-bold text-center">No results found.</Text>
-                            </View>
-                        }
-                        onRefresh={fetchOffers}
-                        refreshing={loading}
-                        contentContainerStyle={{ paddingBottom: 80 }}
-                        showsVerticalScrollIndicator={false}
-                    />
-                )}
-            </View>
+            </Modal>
         </SafeAreaView>
     );
 };
+
+const styles = StyleSheet.create({
+    container: { flex: 1, backgroundColor: '#f8fafc' },
+    subtext: { fontSize: 10, fontWeight: '900', color: '#3b82f6', textTransform: 'uppercase', letterSpacing: 2, marginBottom: 4 },
+    title: { fontSize: 26, fontWeight: '800', color: '#0f172a', letterSpacing: -1 },
+    addBtn: { width: 40, height: 40, backgroundColor: '#0f172a', borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
+    topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 },
+    avatar: { width: 40, height: 40, borderRadius: 8, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center', marginRight: 12 },
+    avatarText: { fontSize: 14, fontWeight: '900', color: '#64748b' },
+    name: { fontSize: 14, fontWeight: '800', color: '#0f172a', textTransform: 'uppercase' },
+    email: { fontSize: 10, fontWeight: '700', color: '#94a3b8' },
+    footer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: 16, borderTopWidth: 1, borderTopColor: '#f1f5f9' },
+    position: { fontSize: 12, fontWeight: '800', color: '#0f172a', textTransform: 'uppercase' },
+    department: { fontSize: 9, fontWeight: '900', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1.5, marginTop: 2 },
+    dateLabel: { fontSize: 9, fontWeight: '800', color: '#94a3b8', textTransform: 'uppercase', marginBottom: 2 },
+    date: { fontSize: 12, fontWeight: '700', color: '#0f172a' },
+    emptyText: { fontSize: 10, fontWeight: '800', color: '#94a3b8', textTransform: 'uppercase', marginTop: 16 },
+    modalOverlay: { flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.4)', justifyContent: 'flex-end' },
+    modalContent: { backgroundColor: 'white', borderTopLeftRadius: 32, borderTopRightRadius: 32 },
+    modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 24, paddingBottom: 16 },
+    modalTitle: { fontSize: 20, fontWeight: '800', color: '#0f172a' },
+    closeBtn: { width: 40, height: 40, backgroundColor: '#f1f5f9', borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+    inputLabel: { fontSize: 10, fontWeight: '900', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 8 },
+    input: { backgroundColor: '#f8fafc', borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 12, height: 50, paddingHorizontal: 16, marginBottom: 12, fontSize: 14, fontWeight: '600', color: '#0f172a' },
+    submitBtn: { backgroundColor: '#0f172a', height: 50, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginTop: 16 },
+    submitBtnText: { color: 'white', fontSize: 11, fontWeight: '900', letterSpacing: 2 }
+});
 
 export default OfferLetters;

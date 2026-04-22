@@ -1,71 +1,55 @@
 import React, { useState } from 'react';
-import { StatusBar } from 'expo-status-bar';
-import { AuthProvider, useAuth } from './src/context/AuthContext';
+import { AuthProvider } from './src/context/AuthContext';
+import Layout from './src/components/Layout';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import Login from './src/pages/Login';
 import Dashboard from './src/pages/Dashboard';
-import Workflows from './src/pages/Workflows';
-import AssignWorkflow from './src/pages/AssignWorkflow';
-import Documents from './src/pages/Documents';
-import AssignmentDetail from './src/pages/AssignmentDetail';
 import Employees from './src/pages/Employees';
+import Workflows from './src/pages/Workflows';
+import Documents from './src/pages/Documents';
+import AssignTask from './src/pages/AssignTask';
 import OfferLetters from './src/pages/OfferLetters';
+import Profile from './src/pages/Profile';
 import EmployeeProfile from './src/pages/EmployeeProfile';
-import Layout from './src/components/Layout';
-import { View, ActivityIndicator } from 'react-native';
-
-import "./global.css";
+import AssignmentDetail from './src/pages/AssignmentDetail';
+import { useAuth } from './src/context/AuthContext';
 
 const AppContent = () => {
-    const { isAuthenticated, loading } = useAuth();
-    const [currentScreen, setCurrentScreen] = useState('Dashboard');
-    const [selectedAssignmentId, setSelectedAssignmentId] = useState<string | null>(null);
-    const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(null);
-
-    if (loading) {
-        return (
-            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F9FAFB' }}>
-                <ActivityIndicator size="large" color="#4F46E5" />
-            </View>
-        );
-    }
-
-    if (!isAuthenticated) return <Login />;
-
-    if (selectedAssignmentId) {
-        return (
-            <AssignmentDetail 
-                assignmentId={selectedAssignmentId} 
-                onBack={() => setSelectedAssignmentId(null)} 
-            />
-        );
-    }
-
-    if (selectedEmployeeId) {
-        return (
-            <EmployeeProfile 
-                employeeId={selectedEmployeeId} 
-                onBack={() => setSelectedEmployeeId(null)} 
-            />
-        );
-    }
-
-    return (
-        <Layout currentScreen={currentScreen} setScreen={setCurrentScreen}>
-            {currentScreen === 'Dashboard' && <Dashboard onSelectAssignment={setSelectedAssignmentId} />}
-            {currentScreen === 'Workflows' && <Workflows />}
-            {currentScreen === 'Employees' && <Employees onSelectEmployee={setSelectedEmployeeId} />}
-            {currentScreen === 'Offers' && <OfferLetters />}
-            {currentScreen === 'Assign' && <AssignWorkflow />}
-            {currentScreen === 'Documents' && <Documents />}
-        </Layout>
-    );
+  const { isAuthenticated, loading } = useAuth();
+  const [currentScreen, setCurrentScreen] = useState('Dashboard');
+  const [selectedEmployee, setSelectedEmployee] = useState('');
+  const [selectedAssignment, setSelectedAssignment] = useState('');
+  
+  if (loading) return null;
+  if (!isAuthenticated) return <Login />;
+  
+  return (
+    <Layout currentScreen={currentScreen} setScreen={setCurrentScreen}>
+      {currentScreen === 'Dashboard' && (
+          <Dashboard onSelectAssignment={(id) => { setSelectedAssignment(id); setCurrentScreen('AssignmentDetail'); }} setScreen={setCurrentScreen} />
+      )}
+      {currentScreen === 'Employees' && <Employees setScreen={setCurrentScreen} onSelectEmployee={setSelectedEmployee} />}
+      {currentScreen === 'EmployeeProfile' && (
+          <EmployeeProfile employeeId={selectedEmployee} onBack={() => setCurrentScreen('Employees')} onSelectAssignment={(id) => { setSelectedAssignment(id); setCurrentScreen('AssignmentDetail'); }} />
+      )}
+      {currentScreen === 'AssignmentDetail' && (
+          <AssignmentDetail assignmentId={selectedAssignment} onBack={() => setCurrentScreen('Dashboard')} />
+      )}
+      {currentScreen === 'AssignTask' && <AssignTask />}
+      {currentScreen === 'OfferLetters' && <OfferLetters />}
+      {currentScreen === 'Profile' && <Profile />}
+      {currentScreen === 'Workflows' && <Workflows />}
+      {currentScreen === 'Documents' && <Documents />}
+    </Layout>
+  );
 };
 
 export default function App() {
-    return (
-        <AuthProvider>
-            <StatusBar style="auto" />
-            <AppContent />
-        </AuthProvider>
-    );
+  return (
+    <SafeAreaProvider>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    </SafeAreaProvider>
+  );
 }

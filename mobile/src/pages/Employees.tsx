@@ -1,100 +1,109 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, TextInput, TouchableOpacity, ActivityIndicator, Alert, SafeAreaView, StatusBar } from 'react-native';
+import { View, Text, FlatList, TextInput, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import api from '../services/api';
+import { DataBlock, WebSectionHeader } from '../components/Theme';
 
-interface EmployeesProps {
-    onSelectEmployee: (id: string) => void;
-}
-
-const Employees = ({ onSelectEmployee }: EmployeesProps) => {
+const Employees = ({ setScreen, onSelectEmployee }: { setScreen: (s:string)=>void, onSelectEmployee: (id:string)=>void }) => {
     const [employees, setEmployees] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
 
-    const fetchEmployees = async () => {
-        try {
-            setLoading(true);
-            const res = await api.get('/users');
-            setEmployees(Array.isArray(res.data) ? res.data : []);
-        } catch (error) {
-            console.error('Fetch employees error:', error);
-            Alert.alert('Error', 'Failed to load employee directory.');
-        } finally {
-            setLoading(false);
-        }
-    };
-
     useEffect(() => {
-        fetchEmployees();
+        const load = async () => {
+            try {
+                const res = await api.get('/users?role=Employee');
+                setEmployees(res.data);
+            } catch (e) {
+                console.error(e);
+            } finally {
+                setLoading(false);
+            }
+        };
+        load();
     }, []);
 
-    const filtered = employees.filter(emp => 
-        emp.name?.toLowerCase().includes(search.toLowerCase()) ||
-        emp.email?.toLowerCase().includes(search.toLowerCase()) ||
-        emp.department?.toLowerCase().includes(search.toLowerCase())
-    );
-
-    const renderItem = ({ item }: { item: any }) => (
-        <TouchableOpacity 
-            activeOpacity={0.7}
-            onPress={() => onSelectEmployee(item._id)}
-            className="bg-white p-4 mb-2 rounded-lg border border-gray-100 flex-row items-center justify-between"
-        >
-            <View className="flex-1">
-                <Text className="text-gray-900 font-bold text-sm uppercase tracking-tight">{item.name}</Text>
-                <Text className="text-[10px] text-gray-400 font-bold uppercase mt-1">
-                    {item.position || item.role} • {item.department || 'Staff'}
-                </Text>
-            </View>
-            <View className="px-2 py-1 bg-gray-50 rounded">
-                <Text className="text-[9px] font-bold text-gray-400 uppercase">Profile</Text>
-            </View>
-        </TouchableOpacity>
+    const filtered = employees.filter(e => 
+        (e.name || '').toLowerCase().includes(search.toLowerCase()) || 
+        (e.email || '').toLowerCase().includes(search.toLowerCase())
     );
 
     return (
-        <SafeAreaView className="flex-1 bg-white">
-            <StatusBar barStyle="dark-content" />
-            <View className="flex-1 px-5">
-                <View className="pt-8 pb-4">
-                    <Text className="text-2xl font-bold text-gray-900 tracking-tight">Directory</Text>
-                    <Text className="text-[10px] text-gray-400 font-bold uppercase mt-1 tracking-widest">{employees.length} team members</Text>
-                    
-                    <View className="mt-6 bg-gray-50 rounded-lg px-4 py-3">
-                        <TextInput
-                            className="h-8 text-gray-900 text-sm font-medium"
-                            placeholder="FIND AN EMPLOYEE..."
-                            placeholderTextColor="#9CA3AF"
-                            value={search}
-                            onChangeText={setSearch}
-                        />
-                    </View>
-                </View>
-
-                {loading ? (
-                    <View className="flex-1 items-center justify-center">
-                        <ActivityIndicator size="small" color="#111827" />
-                    </View>
-                ) : (
-                    <FlatList
-                        data={filtered}
-                        keyExtractor={(item) => item._id}
-                        renderItem={renderItem}
-                        ListEmptyComponent={
-                            <View className="p-8 border-2 border-dashed border-gray-50 rounded-lg items-center mt-4">
-                                <Text className="text-gray-400 text-[10px] font-bold uppercase tracking-widest">No results found</Text>
-                            </View>
-                        }
-                        onRefresh={fetchEmployees}
-                        refreshing={loading}
-                        contentContainerStyle={{ paddingBottom: 80 }}
-                        showsVerticalScrollIndicator={false}
-                    />
-                )}
+        <View style={styles.container}>
+            <View style={styles.searchContainer}>
+                <Feather name="search" size={16} color="#94a3b8" />
+                <TextInput 
+                    style={styles.searchInput}
+                    placeholder="Search directory..."
+                    value={search}
+                    onChangeText={setSearch}
+                />
             </View>
-        </SafeAreaView>
+
+            <WebSectionHeader title="Corporate Directory" count={filtered.length} />
+
+            {loading ? (
+                <ActivityIndicator color="#2563eb" size="large" style={{ marginTop: 40 }} />
+            ) : (
+                <FlatList 
+                    data={filtered}
+                    keyExtractor={item => item._id}
+                    renderItem={({ item }) => (
+                        <TouchableOpacity 
+                            activeOpacity={0.7} 
+                            onPress={() => {
+                                onSelectEmployee(item._id);
+                                setScreen('EmployeeProfile');
+                            }}
+                        >
+                            <DataBlock>
+                                <View style={styles.row}>
+                                    <View style={styles.avatar}>
+                                        <Text style={styles.avatarText}>{item.name.charAt(0)}</Text>
+                                    </View>
+                                    <View style={{ flex: 1 }}>
+                                        <Text style={styles.name}>{item.name}</Text>
+                                        <Text style={styles.role}>{(item.role || 'Employee').toUpperCase()} • {item.email}</Text>
+                                    </View>
+                                    <Feather name="chevron-right" size={16} color="#cbd5e1" />
+                                </View>
+                            </DataBlock>
+                        </TouchableOpacity>
+                    )}
+                    contentContainerStyle={{ paddingBottom: 40 }}
+                />
+            )}
+        </View>
     );
 };
+
+const styles = StyleSheet.create({
+    container: { flex: 1, padding: 20 },
+    searchContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#fff',
+        borderWidth: 1,
+        borderColor: '#e2e8f0',
+        borderRadius: 4,
+        paddingHorizontal: 12,
+        height: 44,
+        marginBottom: 24
+    },
+    searchInput: { flex: 1, marginLeft: 10, fontSize: 14, color: '#0f172a' },
+    row: { flexDirection: 'row', alignItems: 'center' },
+    avatar: {
+        width: 40,
+        height: 40,
+        backgroundColor: '#f1f5f9',
+        borderRadius: 20,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: 16
+    },
+    avatarText: { fontWeight: '700', color: '#64748b' },
+    name: { fontSize: 16, fontWeight: '600', color: '#0f172a' },
+    role: { fontSize: 11, color: '#94a3b8', marginTop: 2, fontWeight: '700' }
+});
 
 export default Employees;

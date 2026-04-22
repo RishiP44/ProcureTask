@@ -8,6 +8,8 @@
 
     /* Bundler mode */
     "moduleResolution": "bundler",
+    "baseUrl": ".",
+    "ignoreDeprecations": "6.0",
     "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
@@ -18,8 +20,14 @@
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+    "typeRoots": ["./node_modules/@types"],
+    "paths": {
+      "react": ["./node_modules/@types/react"],
+      "react-dom": ["./node_modules/@types/react-dom"],
+      "@procuretrack/shared": ["../shared/src/index.ts"]
+    }
   },
-  "include": ["src"],
+  "include": ["src", "../shared/src"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
