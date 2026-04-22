@@ -79,5 +79,3 @@ The platform recently underwent a massive structural and visual transformation:
 - **Missing Data**: Re-run the seed script in the `backend` directory.
 
 ---
-
-*Developed by AntiGravity — Advanced Agentic Coding*
