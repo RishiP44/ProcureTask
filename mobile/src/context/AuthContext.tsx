@@ -6,7 +6,10 @@ import Constants from 'expo-constants';
 // Standalone Mobile API Instance (React 19 Optimized)
 const API_URL = `http://10.0.0.237:5000/api`;
 
-const api = axios.create({ baseURL: API_URL });
+const api = axios.create({ 
+    baseURL: API_URL,
+    timeout: 5000 // Prevent long hangs on connectivity issues
+});
 
 interface User {
     _id: string;

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { View, ActivityIndicator, Text } from 'react-native';
 import { AuthProvider } from './src/context/AuthContext';
 import Layout from './src/components/Layout';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -20,7 +21,14 @@ const AppContent = () => {
   const [selectedEmployee, setSelectedEmployee] = useState('');
   const [selectedAssignment, setSelectedAssignment] = useState('');
   
-  if (loading) return null;
+  if (loading) {
+    return (
+      <View style={{ flex: 1, backgroundColor: '#0f172a', justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color="#3b82f6" />
+        <Text style={{ marginTop: 12, color: '#94a3b8', fontSize: 12, fontWeight: '800', letterSpacing: 1.5 }}>INITIALIZING SYSTEMS...</Text>
+      </View>
+    );
+  }
   if (!isAuthenticated) return <Login />;
   
   return (

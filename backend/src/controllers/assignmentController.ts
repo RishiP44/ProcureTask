@@ -50,7 +50,7 @@ export const assignWorkflow = async (req: Request, res: Response) => {
             workflowName: workflow.name,
             assignedBy: assigner?.name || 'HR Team',
             assignmentId: assignment._id.toString(),
-        }).catch(err => console.error('Email error:', err));
+        }).catch((err: any) => console.error('Email error:', err));
 
         res.status(201).json(assignment);
     } catch (error) {

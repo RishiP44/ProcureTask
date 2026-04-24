@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, FlatList, StatusBar, RefreshControl, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, FlatList, StatusBar, RefreshControl, StyleSheet, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
@@ -138,6 +138,10 @@ const Dashboard = ({ onSelectAssignment, setScreen }: { onSelectAssignment: (id:
                 data={assignments}
                 keyExtractor={(item) => item._id}
                 ListHeaderComponent={DashboardHeader}
+                initialNumToRender={5}
+                maxToRenderPerBatch={10}
+                windowSize={5}
+                removeClippedSubviews={Platform.OS === 'android'}
                 renderItem={({ item }) => {
                     const pct = Math.round(((item.tasks?.filter((t: any) => t.status === 'completed').length || 0) / (item.tasks?.length || 1)) * 100);
                     return (

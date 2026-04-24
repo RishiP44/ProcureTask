@@ -7,11 +7,8 @@ export interface IOfferLetter extends Document {
     };
     position: string;
     department: string;
-    startDate: Date;
-    salary?: string;
-    message?: string;
-    status: 'pending' | 'accepted' | 'declined' | 'expired';
-    sentBy: mongoose.Types.ObjectId;
+    salary: number;
+    status: 'pending' | 'accepted' | 'rejected';
     createdAt: Date;
 }
 
@@ -22,12 +19,8 @@ const OfferLetterSchema: Schema = new Schema({
     },
     position: { type: String, required: true },
     department: { type: String, required: true },
-    startDate: { type: Date, required: true },
-    salary: { type: String },
-    message: { type: String },
-    status: { type: String, enum: ['pending', 'accepted', 'declined', 'expired'], default: 'pending' },
-    sentBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-    createdAt: { type: Date, default: Date.now }
-});
+    salary: { type: Number, default: 0 },
+    status: { type: String, enum: ['pending', 'accepted', 'rejected'], default: 'pending' }
+}, { timestamps: true });
 
 export default mongoose.model<IOfferLetter>('OfferLetter', OfferLetterSchema);
