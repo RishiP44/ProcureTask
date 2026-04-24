@@ -4,13 +4,6 @@ ProcureTask is a workflow automation platform for onboarding, vendor procurement
 
 ---
 
-## 📹 Recorded Demo
-A full walkthrough of the platform (authentication, dashboard, workflows, staff directory, and offer letters) is included in the submission as a backup.
-
-**[Watch Demo Video](./procuretask_demo.webp)**
-
----
-
 ## What You Need Before Starting
 
 Install these on your machine before anything else:
