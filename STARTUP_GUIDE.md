@@ -206,3 +206,56 @@ When your feature is done:
 2.  Go to GitHub and create a **Pull Request (PR)**.
 3.  Ask a teammate to review the code.
 4.  Merge into `main` only after approval.
+
+---
+
+## ⚡ TL;DR — Run It In 5 Steps
+
+For anyone who just wants to get the app running fast — follow these steps in order:
+
+```
+1. Unzip the project folder and open it in your terminal.
+
+2. Install all dependencies (run from the project root):
+   npm install
+
+3. Set up your environment file:
+   cd backend
+   copy .env.example .env        ← Windows
+   cp .env.example .env          ← Mac/Linux
+   cd ..
+
+4. Seed the database (creates admin + employee accounts):
+   cd backend
+   npx ts-node src/seed.ts
+   cd ..
+
+5. Open TWO terminals and run:
+
+   Terminal 1 (Backend):
+   cd backend
+   npm run dev
+   → Server: http://localhost:5000
+
+   Terminal 2 (Frontend):
+   npm run web
+   → App: http://localhost:5173
+```
+
+**Then open http://localhost:5173 in your browser and log in:**
+- Admin: `admin@example.com` / `password123`
+- Employee: `employee@example.com` / `password123`
+
+---
+
+### 📱 Run the Mobile App (Step 6)
+
+> Requires the **Expo Go** app installed on your phone.
+
+```bash
+# Open a new terminal (Terminal 3):
+cd mobile
+npm run mobile
+```
+- Expo dev server starts — scan the QR code with the Expo Go app on your phone.
+- Make sure your phone and computer are on the **same Wi-Fi network**.
