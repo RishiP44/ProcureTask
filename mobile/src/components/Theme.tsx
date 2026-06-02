@@ -141,3 +141,6 @@ const styles = StyleSheet.create({
         color: '#0f172a'
     }
 });
+
+export const GlassCard = DataBlock;
+export const PrimaryButton = IndustrialButton;

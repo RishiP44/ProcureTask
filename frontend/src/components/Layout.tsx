@@ -8,6 +8,8 @@ import {
     User, LogOut, Menu, SendHorizontal, Bell,
     Mail, ClipboardList, ChevronDown
 } from 'lucide-react';
+import HeaderSearch from './HeaderSearch';
+
 
 interface NavItem {
     name: string;
@@ -23,6 +25,7 @@ const Layout = () => {
     const location = useLocation();
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [notifications, setNotifications] = useState<any[]>([]);
+
     const [notifOpen, setNotifOpen] = useState(false);
     const [userMenuOpen, setUserMenuOpen] = useState(false);
     const notifRef = useRef<HTMLDivElement>(null);
@@ -41,6 +44,7 @@ const Layout = () => {
         const interval = setInterval(fetchNotifs, 30000);
         return () => clearInterval(interval);
     }, []);
+
 
     useEffect(() => {
         const handler = (e: MouseEvent) => {
@@ -179,8 +183,12 @@ const Layout = () => {
                     </div>
 
                     <div className="flex items-center gap-6">
+                        {/* Inline Search Bar */}
+                        <HeaderSearch />
+
                         {/* Notifications */}
                         <div className="relative" ref={notifRef}>
+
                             <button
                                 onClick={() => { setNotifOpen(!notifOpen); setUserMenuOpen(false); }}
                                 className="relative p-2 text-slate-400 hover:text-slate-900 transition-colors"

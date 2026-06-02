@@ -149,7 +149,7 @@ const AssignmentDetail = ({ assignmentId, onBack }: AssignmentDetailProps) => {
                     <View style={styles.barBg}>
                         <View style={[styles.barFill, { width: `${progress}%` }]} />
                     </View>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', mt: 16, marginTop: 12 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 12 }}>
                         <Feather name="cpu" size={12} color="#94a3b8" style={{ marginRight: 6 }} />
                         <Text style={styles.segmentsText}>
                             {completedTasks} / {assignment.tasks.length} Segments Finalized

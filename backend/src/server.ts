@@ -27,6 +27,7 @@ import uploadRoutes from './routes/uploadRoutes';
 import documentRoutes from './routes/documentRoutes';
 import offerLetterRoutes from './routes/offerLetterRoutes';
 import notificationRoutes from './routes/notificationRoutes';
+import searchRoutes from './routes/searchRoutes';
 
 app.use('/api/auth', authRoutes);
 app.use('/api/workflows', workflowRoutes);
@@ -36,6 +37,7 @@ app.use('/api/upload', uploadRoutes);
 app.use('/api/documents', documentRoutes);
 app.use('/api/offer-letters', offerLetterRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/search', searchRoutes);
 
 // Static uploads
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
