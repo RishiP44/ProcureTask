@@ -15,6 +15,8 @@ import OfferLetters from './pages/OfferLetters';
 import OfferLetterAccept from './pages/OfferLetterAccept';
 import MyTasks from './pages/MyTasks';
 import Profile from './pages/Profile';
+import NotificationsPanel from './pages/NotificationsPanel';
+
 
 import { Toaster } from 'react-hot-toast';
 import { AnimatePresence } from 'framer-motion';
@@ -44,6 +46,7 @@ function AnimatedRoutes() {
                         <Route path="/workflows" element={<Workflows />} />
                         <Route path="/workflows/create" element={<CreateWorkflow />} />
                         <Route path="/documents" element={<Documents />} />
+                        <Route path="/notifications-panel" element={<NotificationsPanel />} />
 
                         {/* Employee routes */}
                         <Route path="/my-tasks" element={<MyTasks />} />

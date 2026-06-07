@@ -9,6 +9,7 @@ import {
     Mail, ClipboardList, ChevronDown
 } from 'lucide-react';
 import HeaderSearch from './HeaderSearch';
+import toast from 'react-hot-toast';
 
 
 interface NavItem {
@@ -33,15 +34,61 @@ const Layout = () => {
 
     const unread = notifications.filter(n => !n.read).length;
 
+    const handleNotificationClick = async (notif: any) => {
+        setNotifOpen(false);
+        try {
+            await api.put(`/notifications/${notif._id}/read`);
+            setNotifications(prev => 
+                prev.map(n => n._id === notif._id ? { ...n, read: true } : n)
+            );
+            if (notif.link) {
+                navigate(notif.link);
+            }
+        } catch (err) {
+            console.error('Failed to mark notification as read', err);
+        }
+    };
+
+    const handleMarkAllAsRead = async () => {
+        try {
+            await api.put('/notifications/read-all');
+            setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+            toast.success('All notifications marked as read');
+        } catch (err) {
+            toast.error('Failed to mark all as read');
+        }
+    };
+
     useEffect(() => {
         const fetchNotifs = async () => {
             try {
                 const res = await api.get('/notifications');
-                setNotifications(res.data);
+                setNotifications(prev => {
+                    // Check if we have newly arrived unread notifications
+                    const prevUnreadIds = new Set(prev.filter(n => !n.read).map(n => n._id));
+                    const newUnreads = res.data.filter((n: any) => !n.read && !prevUnreadIds.has(n._id));
+                    if (newUnreads.length > 0) {
+                        newUnreads.forEach((nu: any) => {
+                            toast(
+                                (t) => (
+                                    <div className="flex flex-col gap-1 cursor-pointer" onClick={() => {
+                                        toast.dismiss(t.id);
+                                        handleNotificationClick(nu);
+                                    }}>
+                                        <span className="font-extrabold text-xs text-blue-600 uppercase tracking-widest">{nu.title}</span>
+                                        <span className="text-[10px] text-slate-500 font-medium">{nu.message}</span>
+                                    </div>
+                                ),
+                                { duration: 5000 }
+                            );
+                        });
+                    }
+                    return res.data;
+                });
             } catch { /* silent */ }
         };
         fetchNotifs();
-        const interval = setInterval(fetchNotifs, 30000);
+        const interval = setInterval(fetchNotifs, 15000); // Poll every 15s for better responsiveness
         return () => clearInterval(interval);
     }, []);
 
@@ -67,6 +114,7 @@ const Layout = () => {
         { name: 'Offer Letters', path: '/offer-letters', icon: <Mail className="w-4 h-4" />, roles: ['Admin', 'HR'] },
         { name: 'Workflows', path: '/workflows', icon: <Workflow className="w-4 h-4" />, roles: ['Admin', 'HR'] },
         { name: 'Documents', path: '/documents', icon: <FileText className="w-4 h-4" />, roles: ['Admin', 'HR'] },
+        { name: 'Alerts & Reminders', path: '/notifications-panel', icon: <Bell className="w-4 h-4" />, roles: ['Admin', 'HR'] },
         { name: 'My Tasks', path: '/my-tasks', icon: <ClipboardList className="w-4 h-4" />, roles: ['Employee', 'Vendor'] },
         { name: 'My Profile', path: '/profile', icon: <User className="w-4 h-4" />, roles: ['Admin', 'HR', 'Employee', 'Vendor'] },
     ];
@@ -204,14 +252,31 @@ const Layout = () => {
                                         exit={{ opacity: 0, scale: 0.95, y: 10 }}
                                         className="absolute right-0 top-full mt-4 w-80 pt-glass-card shadow-2xl z-20"
                                     >
-                                        <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50">
+                                        <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
                                             <h3 className="font-extrabold text-slate-900 text-[10px] uppercase tracking-widest">Recent Activity</h3>
+                                            {unread > 0 && (
+                                                <button 
+                                                    onClick={handleMarkAllAsRead}
+                                                    className="text-[9px] font-extrabold text-blue-600 hover:text-blue-700 uppercase tracking-widest"
+                                                >
+                                                    Mark read
+                                                </button>
+                                            )}
                                         </div>
                                         <div className="max-h-80 overflow-y-auto divide-y divide-slate-50">
                                             {notifications.map(n => (
-                                                <div key={n._id} className="px-6 py-4 hover:bg-slate-50 transition-colors cursor-pointer">
-                                                    <p className="text-[11px] font-bold text-slate-900">{n.title}</p>
-                                                    <p className="text-[10px] text-slate-500 mt-0.5">{n.message}</p>
+                                                <div 
+                                                    key={n._id} 
+                                                    onClick={() => handleNotificationClick(n)}
+                                                    className={`px-6 py-4 hover:bg-slate-50/80 transition-colors cursor-pointer relative flex items-start gap-2.5 ${!n.read ? 'bg-blue-50/30' : ''}`}
+                                                >
+                                                    {!n.read && (
+                                                        <span className="w-1.5 h-1.5 bg-blue-600 rounded-full flex-shrink-0 mt-1.5 animate-pulse" />
+                                                    )}
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className={`text-[11px] font-bold text-slate-900 ${!n.read ? 'text-blue-950 font-extrabold' : ''}`}>{n.title}</p>
+                                                        <p className="text-[10px] text-slate-500 mt-0.5">{n.message}</p>
+                                                    </div>
                                                 </div>
                                             ))}
                                             {notifications.length === 0 && (

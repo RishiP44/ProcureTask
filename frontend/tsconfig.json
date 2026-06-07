@@ -9,10 +9,7 @@
     /* Bundler mode */
     "moduleResolution": "bundler",
     "baseUrl": ".",
-<<<<<<< HEAD
-=======
     "ignoreDeprecations": "5.0",
->>>>>>> 48f2eeb33d49eee1602accbfdcc6f9f5d5985909
     "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
     "isolatedModules": true,

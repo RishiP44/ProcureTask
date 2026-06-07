@@ -129,6 +129,17 @@ const AssignmentDetail = () => {
                                 Assigned by {assignment.assignedBy.name} · {new Date(assignment.createdAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
                             </p>
                         )}
+                        {assignment.dueDate && (
+                            <div className="flex items-center gap-2 mt-2">
+                                <Clock className={`w-4 h-4 ${new Date(assignment.dueDate) < new Date() && assignment.status !== 'completed' ? 'text-rose-500 animate-pulse' : 'text-slate-400'}`} />
+                                <span className="text-sm text-slate-500 font-medium">
+                                    Due Date: <strong className="text-slate-700">{new Date(assignment.dueDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</strong>
+                                    {new Date(assignment.dueDate) < new Date() && assignment.status !== 'completed' && (
+                                        <span className="text-rose-500 font-bold ml-2">(Overdue)</span>
+                                    )}
+                                </span>
+                            </div>
+                        )}
                     </div>
                     <span className={`px-3 py-1.5 rounded-xl text-sm font-semibold self-start flex-shrink-0 ${statusColors[assignment.status] || 'text-slate-600 bg-slate-100'}`}>
                         {assignment.status.replace('_', ' ')}
