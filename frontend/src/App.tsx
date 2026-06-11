@@ -6,6 +6,7 @@ import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
 import Workflows from './pages/Workflows';
 import CreateWorkflow from './pages/CreateWorkflow';
+import EditWorkflow from './pages/EditWorkflow';
 import AssignWorkflow from './pages/AssignWorkflow';
 import AssignmentDetail from './pages/AssignmentDetail';
 import Documents from './pages/Documents';
@@ -43,6 +44,7 @@ function AnimatedRoutes() {
                         <Route path="/offer-letters" element={<OfferLetters />} />
                         <Route path="/workflows" element={<Workflows />} />
                         <Route path="/workflows/create" element={<CreateWorkflow />} />
+                        <Route path="/workflows/:id/edit" element={<EditWorkflow />} />
                         <Route path="/documents" element={<Documents />} />
 
                         {/* Employee routes */}

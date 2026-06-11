@@ -6,13 +6,18 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
     Workflow, Plus, ChevronRight, Activity, 
     Layers, ShieldCheck, Zap,
-    Trash2, Edit3, Search
+    Trash2, Edit3, Search, History
 } from 'lucide-react';
 
 const Workflows = () => {
     const [workflows, setWorkflows] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
+    
+    // State for managing version history modal
+    const [historyModalOpen, setHistoryModalOpen] = useState(false);
+    const [selectedHistory, setSelectedHistory] = useState<any[]>([]);
+    const [selectedWorkflowName, setSelectedWorkflowName] = useState('');
 
     useEffect(() => {
         fetchWorkflows();
@@ -30,16 +35,31 @@ const Workflows = () => {
         }
     };
 
-    const handleDelete = async (id: string, e: React.MouseEvent) => {
+    // AI Assisted: Soft archival logic
+    const handleArchive = async (id: string, e: React.MouseEvent) => {
         e.stopPropagation();
         e.preventDefault();
-        if (!window.confirm('Executing permanent deletion of this logic stream. Proceed?')) return;
+        if (!window.confirm('Archive this workflow template? It will not disrupt existing assignments.')) return;
         try {
             await api.delete(`/workflows/${id}`);
-            toast.success('Workflow Stream Terminated');
+            toast.success('Workflow Stream Archived');
             fetchWorkflows();
         } catch {
-            toast.error('Termination sequence interrupted');
+            toast.error('Archival sequence interrupted');
+        }
+    };
+
+    // AI Assisted: Historical workflow preservation - view version history
+    const handleOpenHistory = async (wf: any, e: React.MouseEvent) => {
+        e.stopPropagation();
+        e.preventDefault();
+        try {
+            setSelectedWorkflowName(wf.name);
+            const res = await api.get(`/workflows/${wf._id}/history`);
+            setSelectedHistory(res.data);
+            setHistoryModalOpen(true);
+        } catch {
+            toast.error('Failed to retrieve version history');
         }
     };
 
@@ -106,12 +126,25 @@ const Workflows = () => {
                                         <Layers className="w-6 h-6" />
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        <button className="p-2 text-slate-300 hover:text-slate-900 transition-colors">
-                                            <Edit3 className="w-4 h-4" />
-                                        </button>
                                         <button 
-                                            onClick={(e) => handleDelete(wf._id, e)}
+                                            onClick={(e) => handleOpenHistory(wf, e)}
+                                            className="p-2 text-slate-300 hover:text-slate-900 transition-colors"
+                                            title="Version History"
+                                        >
+                                            <History className="w-4 h-4" />
+                                        </button>
+                                        <Link 
+                                            to={`/workflows/${wf._id}/edit`} 
+                                            className="p-2 text-slate-300 hover:text-slate-900 transition-colors"
+                                            onClick={(e) => e.stopPropagation()}
+                                            title="Edit Workflow"
+                                        >
+                                            <Edit3 className="w-4 h-4" />
+                                        </Link>
+                                        <button 
+                                            onClick={(e) => handleArchive(wf._id, e)}
                                             className="p-2 text-slate-300 hover:text-rose-500 transition-colors"
+                                            title="Archive Workflow"
                                         >
                                             <Trash2 className="w-4 h-4" />
                                         </button>
@@ -119,7 +152,10 @@ const Workflows = () => {
                                 </div>
 
                                 <div className="mt-8 relative z-10">
-                                    <h3 className="text-xl font-black text-slate-900 pt-outfit group-hover:text-blue-600 transition-colors">{wf.name}</h3>
+                                    <div className="flex items-center gap-3">
+                                        <h3 className="text-xl font-black text-slate-900 pt-outfit group-hover:text-blue-600 transition-colors">{wf.name}</h3>
+                                        <span className="px-2 py-0.5 text-[9px] font-black bg-blue-50 text-blue-600 border border-blue-100 rounded-full">v{wf.version || 1}</span>
+                                    </div>
                                     <p className="text-slate-400 text-sm mt-3 font-medium line-clamp-2 min-h-[40px]">{wf.description || 'No system documentation available for this workflow.'}</p>
                                 </div>
 
@@ -163,6 +199,66 @@ const Workflows = () => {
                     </div>
                 )}
             </div>
+
+            {/* Version History Modal */}
+            <AnimatePresence>
+                {historyModalOpen && (
+                    <motion.div 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4"
+                        onClick={() => setHistoryModalOpen(false)}
+                    >
+                        <motion.div 
+                            initial={{ scale: 0.95, y: 20 }}
+                            animate={{ scale: 1, y: 0 }}
+                            exit={{ scale: 0.95, y: 20 }}
+                            className="bg-white rounded-3xl p-8 max-w-2xl w-full max-h-[80vh] overflow-y-auto shadow-2xl border border-slate-100"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <div className="flex justify-between items-start mb-6">
+                                <div>
+                                    <h2 className="text-[10px] font-extrabold text-blue-500 uppercase tracking-[0.3em] mb-1 font-black">Audit Trail</h2>
+                                    <h3 className="text-2xl font-black text-slate-900 pt-outfit">Version History</h3>
+                                    <p className="text-slate-400 text-xs font-semibold mt-1">Showing historical records for "{selectedWorkflowName}"</p>
+                                </div>
+                                <button 
+                                    onClick={() => setHistoryModalOpen(false)}
+                                    className="p-2 text-slate-400 hover:text-slate-900 rounded-full hover:bg-slate-50 transition-colors font-bold text-sm"
+                                >
+                                    ✕
+                                </button>
+                            </div>
+
+                            <div className="space-y-4">
+                                {selectedHistory.map((item) => (
+                                    <div key={item._id} className="p-5 border border-slate-100 rounded-2xl bg-slate-50 flex justify-between items-center">
+                                        <div>
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-sm font-bold text-slate-900">{item.name}</span>
+                                                <span className={`px-2 py-0.5 text-[9px] font-black uppercase rounded-full ${item.isLatest ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-slate-200/60 text-slate-500 border border-slate-200'}`}>
+                                                    v{item.version || 1} {item.isLatest && '(Latest)'}
+                                                </span>
+                                                {item.isArchived && (
+                                                    <span className="px-2 py-0.5 text-[9px] font-black bg-rose-50 text-rose-600 border border-rose-100 rounded-full uppercase">
+                                                        Archived
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <p className="text-slate-400 text-xs mt-1.5 line-clamp-1">{item.description || 'No description provided.'}</p>
+                                            <div className="text-[10px] font-bold text-slate-400 mt-2 flex gap-4">
+                                                <span>Modified: {new Date(item.updatedAt).toLocaleDateString()}</span>
+                                                <span>Steps: {item.tasks?.length || 0}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };

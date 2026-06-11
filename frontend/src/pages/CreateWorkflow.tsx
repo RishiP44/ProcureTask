@@ -32,8 +32,9 @@ const CreateWorkflow = () => {
             await api.post('/workflows', { name, description, tasks });
             toast.success('Workflow created successfully');
             navigate('/workflows');
-        } catch (error) {
-            toast.error('Failed to create workflow');
+        } catch (error: any) {
+            const msg = error.response?.data?.message || 'Failed to create workflow';
+            toast.error(msg);
         }
     };
 

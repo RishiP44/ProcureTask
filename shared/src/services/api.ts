@@ -26,7 +26,10 @@ export const assignmentService = (api: AxiosInstance) => ({
 export const workflowService = (api: AxiosInstance) => ({
     getAll: () => api.get('/workflows'),
     create: (data: any) => api.post('/workflows', data),
+    update: (id: string, data: any) => api.put(`/workflows/${id}`, data),
     delete: (id: string) => api.delete(`/workflows/${id}`),
+    checkAssignments: (id: string) => api.get(`/workflows/${id}/assignments-check`),
+    getHistory: (id: string) => api.get(`/workflows/${id}/history`),
 });
 
 export const authService = (api: AxiosInstance) => ({

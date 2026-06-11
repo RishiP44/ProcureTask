@@ -10,7 +10,11 @@ export interface Workflow {
     _id: string;
     name: string;
     description: string;
-    steps: { name: string; description: string; order: number }[];
+    tasks?: { _id?: string; name: string; description?: string; type: 'checkbox' | 'document'; required: boolean }[];
+    version?: number;
+    isLatest?: boolean;
+    rootId?: string;
+    isArchived?: boolean;
 }
 
 export interface Assignment {
