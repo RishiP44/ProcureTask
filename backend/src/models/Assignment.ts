@@ -17,6 +17,8 @@ export interface IAssignment extends Document {
     tasks: ITaskInstance[];
     status: 'pending' | 'in_progress' | 'completed';
     assignedBy: mongoose.Types.ObjectId;
+    dueDate?: Date;
+    lastReminderSentAt?: Date;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -37,6 +39,8 @@ const AssignmentSchema: Schema = new Schema({
     tasks: [TaskInstanceSchema],
     status: { type: String, enum: ['pending', 'in_progress', 'completed'], default: 'pending' },
     assignedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    dueDate: { type: Date },
+    lastReminderSentAt: { type: Date },
 }, { timestamps: true });
 
 export default mongoose.model<IAssignment>('Assignment', AssignmentSchema);

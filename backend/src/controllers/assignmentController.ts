@@ -2,13 +2,12 @@ import { Request, Response } from 'express';
 import Assignment from '../models/Assignment';
 import Workflow from '../models/Workflow';
 import User from '../models/User';
-import Notification from '../models/Notification';
-import { sendTaskAssignmentEmail } from '../services/emailService';
+import { NotificationService } from '../services/notificationService';
 
 // @desc    Assign workflow to a user
 export const assignWorkflow = async (req: Request, res: Response) => {
     try {
-        const { userId, workflowId } = req.body;
+        const { userId, workflowId, dueDate } = req.body;
 
         const workflow = await Workflow.findById(workflowId);
         if (!workflow) return res.status(404).json({ message: 'Workflow not found' });
@@ -32,25 +31,29 @@ export const assignWorkflow = async (req: Request, res: Response) => {
             tasks: taskInstances,
             status: 'pending',
             assignedBy: (req as any).user.id,
+            dueDate: dueDate ? new Date(dueDate) : undefined,
         });
 
         // Create in-app notification
-        await Notification.create({
-            user: userId,
+        NotificationService.sendNotification({
+            userId: userId,
             title: 'New Task Assigned',
             message: `${assigner?.name || 'HR'} assigned you "${workflow.name}"`,
             type: 'task_assigned',
             link: `/assignments/${assignment._id}`,
-        });
+            category: 'assignment_alert',
+            assignmentId: assignment._id
+        }).catch((err: any) => console.error('In-app notification error:', err));
 
         // Send email notification (non-blocking)
-        sendTaskAssignmentEmail({
+        NotificationService.sendEmailNotification({
+            userId: userId,
             to: user.email,
-            employeeName: user.name,
-            workflowName: workflow.name,
-            assignedBy: assigner?.name || 'HR Team',
-            assignmentId: assignment._id.toString(),
-        }).catch((err: any) => console.error('Email error:', err));
+            subject: `New Assignment Alert: ${workflow.name}`,
+            body: `Hi ${user.name},\n\nYou have been assigned a new workflow "${workflow.name}" by ${assigner?.name || 'HR Team'}.\n\nView details: http://localhost:5173/assignments/${assignment._id}`,
+            category: 'assignment_alert',
+            assignmentId: assignment._id
+        }).catch((err: any) => console.error('Email notification error:', err));
 
         res.status(201).json(assignment);
     } catch (error) {
@@ -107,7 +110,9 @@ export const getAssignmentById = async (req: Request, res: Response) => {
 export const updateTaskStatus = async (req: Request, res: Response) => {
     try {
         const { status, documentUrl } = req.body;
-        const assignment = await Assignment.findById(req.params.id).populate('user', 'name');
+        const assignment = await Assignment.findById(req.params.id)
+            .populate('user', 'name email')
+            .populate('workflow', 'name');
 
         if (!assignment) return res.status(404).json({ message: 'Assignment not found' });
 
@@ -133,13 +138,28 @@ export const updateTaskStatus = async (req: Request, res: Response) => {
 
         // Notify assignedBy if all completed
         if (allCompleted && assignment.assignedBy) {
-            await Notification.create({
-                user: assignment.assignedBy,
+            NotificationService.sendNotification({
+                userId: assignment.assignedBy,
                 title: 'Assignment Completed',
                 message: `${(assignment.user as any).name} completed all tasks in the assigned workflow.`,
                 type: 'task_completed',
                 link: `/assignments/${assignment._id}`,
-            });
+                category: 'task_completed',
+                assignmentId: assignment._id
+            }).catch((err: any) => console.error('Task completed notification error:', err));
+
+            // Optional: send email to the assigner
+            const assigner = await User.findById(assignment.assignedBy);
+            if (assigner) {
+                NotificationService.sendEmailNotification({
+                    userId: assignment.assignedBy,
+                    to: assigner.email,
+                    subject: `Assignment Completed: ${((assignment as any).workflow as any).name}`,
+                    body: `Hi ${assigner.name},\n\n${(assignment.user as any).name} has completed all tasks in the assigned workflow "${((assignment as any).workflow as any).name}".\n\nView details: http://localhost:5173/assignments/${assignment._id}`,
+                    category: 'task_completed',
+                    assignmentId: assignment._id
+                }).catch((err: any) => console.error('Task completed email error:', err));
+            }
         }
 
         res.json(assignment);

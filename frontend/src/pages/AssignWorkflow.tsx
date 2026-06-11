@@ -20,6 +20,7 @@ const AssignWorkflow = () => {
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [done, setDone] = useState(false);
+    const [dueDate, setDueDate] = useState('');
 
     useEffect(() => {
         const fetchData = async () => {
@@ -44,7 +45,11 @@ const AssignWorkflow = () => {
         }
         setSubmitting(true);
         try {
-            await api.post('/assignments', { userId: selectedUser, workflowId: selectedWorkflow });
+            await api.post('/assignments', {
+                userId: selectedUser,
+                workflowId: selectedWorkflow,
+                dueDate: dueDate || undefined
+            });
             toast.success('Workflow assigned successfully!');
             setDone(true);
         } catch (err: any) {
@@ -178,6 +183,23 @@ const AssignWorkflow = () => {
                         </div>
                     </div>
                 </div>
+
+                {/* Due Date Selection */}
+                {selectedUser && selectedWorkflow && (
+                    <div className="pt-card p-5 mb-6 animate-fade-in">
+                        <h3 className="font-semibold text-slate-900 mb-3 text-sm">Set Completion Target (Optional)</h3>
+                        <div className="max-w-xs">
+                            <label className="block text-xs font-black text-slate-400 tracking-widest mb-2 uppercase">Due Date</label>
+                            <input 
+                                type="date" 
+                                className="pt-input text-xs" 
+                                value={dueDate} 
+                                onChange={e => setDueDate(e.target.value)} 
+                                min={new Date().toISOString().split('T')[0]}
+                            />
+                        </div>
+                    </div>
+                )}
 
                 {/* Summary & Submit */}
                 {selectedUser && selectedWorkflow && (

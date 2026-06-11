@@ -32,7 +32,12 @@ const AppContent = () => {
   if (!isAuthenticated) return <Login />;
   
   return (
-    <Layout currentScreen={currentScreen} setScreen={setCurrentScreen}>
+    <Layout 
+      currentScreen={currentScreen} 
+      setScreen={setCurrentScreen}
+      onSelectEmployee={(id) => { setSelectedEmployee(id); setCurrentScreen('EmployeeProfile'); }}
+      onSelectAssignment={(id) => { setSelectedAssignment(id); setCurrentScreen('AssignmentDetail'); }}
+    >
       {currentScreen === 'Dashboard' && (
           <Dashboard onSelectAssignment={(id) => { setSelectedAssignment(id); setCurrentScreen('AssignmentDetail'); }} setScreen={setCurrentScreen} />
       )}

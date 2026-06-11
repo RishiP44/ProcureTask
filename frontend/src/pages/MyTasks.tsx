@@ -168,6 +168,14 @@ const MyTasks = () => {
                                                 Assigned {new Date(assignment.createdAt).toLocaleDateString()}
                                             </span>
                                         </div>
+                                        {assignment.dueDate && (
+                                            <div className="flex items-center gap-1.5">
+                                                <Clock className={`w-3.5 h-3.5 ${new Date(assignment.dueDate) < new Date() && assignment.status !== 'completed' ? 'text-rose-500 animate-pulse' : 'text-slate-300'}`} />
+                                                <span className={`text-[10px] font-black uppercase tracking-widest ${new Date(assignment.dueDate) < new Date() && assignment.status !== 'completed' ? 'text-rose-500 font-bold' : 'text-slate-400'}`}>
+                                                    Due {new Date(assignment.dueDate).toLocaleDateString()} {new Date(assignment.dueDate) < new Date() && assignment.status !== 'completed' ? '(Overdue)' : ''}
+                                                </span>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </div>
