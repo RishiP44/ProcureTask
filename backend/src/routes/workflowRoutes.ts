@@ -4,7 +4,9 @@ import {
     getWorkflows, 
     getWorkflowById,
     updateWorkflow,
-    deleteWorkflow
+    deleteWorkflow,
+    checkWorkflowAssignments,
+    getWorkflowHistory
 } from '../controllers/workflowController';
 import { protect, authorize } from '../middleware/authMiddleware';
 
@@ -18,5 +20,11 @@ router.route('/:id')
     .get(protect, getWorkflowById)
     .put(protect, authorize('Admin', 'HR'), updateWorkflow)
     .delete(protect, authorize('Admin', 'HR'), deleteWorkflow);
+
+router.route('/:id/assignments-check')
+    .get(protect, authorize('Admin', 'HR'), checkWorkflowAssignments);
+
+router.route('/:id/history')
+    .get(protect, authorize('Admin', 'HR'), getWorkflowHistory);
 
 export default router;
