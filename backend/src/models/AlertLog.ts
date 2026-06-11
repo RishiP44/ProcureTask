@@ -4,7 +4,7 @@ export interface IAlertLog extends Document {
     user?: mongoose.Types.ObjectId;
     assignment?: mongoose.Types.ObjectId;
     taskName?: string;
-    type: 'in-app' | 'email';
+    type: 'in-app' | 'email' | 'sms';
     category: 'assignment_alert' | 'overdue_reminder' | 'missing_document' | 'task_completed';
     title: string;
     message: string;
@@ -17,7 +17,7 @@ const AlertLogSchema: Schema = new Schema({
     user: { type: Schema.Types.ObjectId, ref: 'User' },
     assignment: { type: Schema.Types.ObjectId, ref: 'Assignment' },
     taskName: { type: String },
-    type: { type: String, enum: ['in-app', 'email'], required: true },
+    type: { type: String, enum: ['in-app', 'email', 'sms'], required: true },
     category: { type: String, required: true },
     title: { type: String, required: true },
     message: { type: String, required: true },

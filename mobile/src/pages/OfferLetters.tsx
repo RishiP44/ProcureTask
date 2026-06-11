@@ -58,28 +58,61 @@ const OfferLetters = () => {
         }
     };
 
+    const handleRevoke = async (id: string) => {
+        Alert.alert(
+            'Revoke Offer',
+            'Are you sure you want to revoke this pending offer letter?',
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: 'Revoke',
+                    style: 'destructive',
+                    onPress: async () => {
+                        try {
+                            await api.delete(`/offer-letters/${id}`);
+                            Alert.alert('Success', 'Offer letter successfully revoked.');
+                            fetchOffers();
+                        } catch (err: any) {
+                            Alert.alert('Error', err.response?.data?.message || 'Failed to revoke offer letter.');
+                        }
+                    }
+                }
+            ]
+        );
+    };
+
     const renderItem = ({ item }: { item: any }) => (
         <TouchableOpacity activeOpacity={0.8} style={{ marginBottom: 16 }}>
             <DataBlock>
                 <View style={styles.topRow}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
                         <View style={styles.avatar}>
                             <Text style={styles.avatarText}>
                                 {(item.candidate?.name || 'U').charAt(0).toUpperCase()}
                             </Text>
                         </View>
-                        <View>
+                        <View style={{ flex: 1 }}>
                             <Text style={styles.name}>{item.candidate?.name}</Text>
-                            <Text style={styles.email}>{item.candidate?.email}</Text>
+                            <Text style={styles.email} numberOfLines={1}>{item.candidate?.email}</Text>
                         </View>
                     </View>
-                    <WebBadge status={item.status} />
+                    <View style={{ alignItems: 'flex-end', gap: 6, marginLeft: 8 }}>
+                        <WebBadge status={item.status} />
+                        {item.status === 'pending' && (
+                            <TouchableOpacity 
+                                onPress={() => handleRevoke(item._id)}
+                                style={{ padding: 6, backgroundColor: '#fef2f2', borderRadius: 6 }}
+                            >
+                                <Feather name="trash-2" size={14} color="#ef4444" />
+                            </TouchableOpacity>
+                        )}
+                    </View>
                 </View>
                 
                 <View style={styles.footer}>
-                    <View>
+                    <View style={{ flex: 1, marginRight: 8 }}>
                         <Text style={styles.position}>{item.position}</Text>
-                        <Text style={styles.department}>{item.department}</Text>
+                        <Text style={styles.department} numberOfLines={1}>{item.department}</Text>
                     </View>
                     <View style={{ alignItems: 'flex-end' }}>
                         <Text style={styles.dateLabel}>DISPATCHED</Text>

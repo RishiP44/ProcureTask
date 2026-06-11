@@ -4,7 +4,7 @@ import toast from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     SendHorizontal, Plus, Loader2, Mail,
-    Check, Clock, FileText, TrendingUp
+    Check, Clock, FileText, TrendingUp, Trash2
 } from 'lucide-react';
 
 const StatusBadge = ({ status }: { status: string }) => {
@@ -58,6 +58,21 @@ const OfferLetters = () => {
             toast.error(err.response?.data?.message || 'Transmission Interrupted');
         } finally { setSubmitting(false); }
     };
+
+    const handleRevoke = async (id: string, e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (!window.confirm('Are you sure you want to revoke this pending offer letter? This action cannot be undone.')) {
+            return;
+        }
+        try {
+            await api.delete(`/offer-letters/${id}`);
+            toast.success('Offer letter successfully revoked');
+            fetchOffers();
+        } catch (err: any) {
+            toast.error(err.response?.data?.message || 'Failed to revoke offer letter');
+        }
+    };
+
 
     const stats = {
         total: offers.length,
@@ -141,6 +156,7 @@ const OfferLetters = () => {
                             <th className="px-8 py-5 text-[9px] font-black text-slate-400 uppercase tracking-widest">Target Role</th>
                             <th className="px-8 py-5 text-[9px] font-black text-slate-400 uppercase tracking-widest">Deployment Date</th>
                             <th className="px-8 py-5 text-[9px] font-black text-slate-400 uppercase tracking-widest text-right">Status</th>
+                            <th className="px-8 py-5 text-[9px] font-black text-slate-400 uppercase tracking-widest text-right">Actions</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-50">
@@ -165,11 +181,22 @@ const OfferLetters = () => {
                                     {new Date(o.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                                 </td>
                                 <td className="px-8 py-5 text-right"><StatusBadge status={o.status} /></td>
+                                <td className="px-8 py-5 text-right">
+                                    {o.status === 'pending' && (
+                                        <button 
+                                            onClick={(e) => handleRevoke(o._id, e)}
+                                            className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                                            title="Revoke Offer"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                    )}
+                                </td>
                             </tr>
                         ))}
                         {offers.length === 0 && (
                             <tr>
-                                <td colSpan={4} className="py-20 text-center">
+                                <td colSpan={5} className="py-20 text-center">
                                     <Mail className="w-12 h-12 text-slate-200 mx-auto mb-4" />
                                     <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em]">Zero outbound engagement detected</p>
                                 </td>
