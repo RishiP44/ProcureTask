@@ -3,6 +3,8 @@ import Notification from '../models/Notification';
 import AlertLog from '../models/AlertLog';
 import Assignment from '../models/Assignment';
 import User from '../models/User';
+import { sendGeneralEmail } from './emailService';
+import { sendSMS } from './smsService';
 
 export interface NotificationParams {
     userId: string | mongoose.Types.ObjectId;
@@ -84,7 +86,7 @@ export class NotificationService {
     }
 
     /**
-     * Simulate sending an email and log it.
+     * Send email via SendGrid and trigger SMS via Twilio if phone number exists.
      */
     static async sendEmailNotification({
         userId,
@@ -96,12 +98,28 @@ export class NotificationService {
         taskName
     }: EmailParams) {
         try {
-            console.log(`📧 Simulation: Sending email to ${to}`);
-            console.log(`Subject: ${subject}`);
-            console.log(`Body: ${body}`);
-            console.log('----------------------------------------------------');
+            // Generate clean HTML content for SendGrid
+            const htmlContent = `
+                <div style="font-family: 'Inter', sans-serif; max-width: 600px; margin: 0 auto; padding: 25px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;">
+                    <h2 style="color: #0f172a; font-size: 20px; font-weight: 700; margin-top: 0; margin-bottom: 15px;">Notification Alert</h2>
+                    <p style="color: #334155; font-size: 15px; line-height: 1.5; white-space: pre-line;">
+                        ${body}
+                    </p>
+                    <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 20px 0;" />
+                    <p style="color: #94a3b8; font-size: 11px; margin-bottom: 0;">
+                        This is an automated message from ProcureTask. Please do not reply directly to this email.
+                    </p>
+                </div>
+            `;
 
-            // Log to AlertLog
+            // Send via SendGrid
+            await sendGeneralEmail({
+                to,
+                subject,
+                html: htmlContent
+            });
+
+            // Log email status
             const log = await AlertLog.create({
                 user: userId,
                 assignment: assignmentId,
@@ -114,9 +132,29 @@ export class NotificationService {
                 sentAt: new Date()
             });
 
+            // Auto-trigger SMS if user has a phone number
+            const user = await User.findById(userId);
+            if (user && user.phone) {
+                const cleanPhone = user.phone.trim();
+                if (cleanPhone) {
+                    const appUrl = process.env.APP_URL || 'http://localhost:5173';
+                    const assignmentLinkPart = assignmentId ? ` View: ${appUrl}/assignments/${assignmentId}` : '';
+                    const smsBody = `${subject}: ${body.substring(0, 80)}...${assignmentLinkPart}`;
+                    
+                    await this.sendSMSNotification({
+                        userId,
+                        phone: cleanPhone,
+                        body: smsBody,
+                        category,
+                        assignmentId,
+                        taskName
+                    }).catch(smsErr => console.error('Auto-SMS failed:', smsErr));
+                }
+            }
+
             return log;
         } catch (error: any) {
-            console.error('❌ Error in email notification simulation:', error);
+            console.error('❌ Error in email/sms notification handler:', error);
             await AlertLog.create({
                 user: userId,
                 assignment: assignmentId,
@@ -129,6 +167,59 @@ export class NotificationService {
                 errorDetail: error.message,
                 sentAt: new Date()
             }).catch(err => console.error('AlertLog write fail:', err));
+            throw error;
+        }
+    }
+
+    /**
+     * Send SMS via Twilio and log to AlertLog.
+     */
+    static async sendSMSNotification({
+        userId,
+        phone,
+        body,
+        category,
+        assignmentId,
+        taskName
+    }: {
+        userId: string | mongoose.Types.ObjectId;
+        phone: string;
+        body: string;
+        category: 'assignment_alert' | 'overdue_reminder' | 'missing_document' | 'task_completed';
+        assignmentId?: string | mongoose.Types.ObjectId;
+        taskName?: string;
+    }) {
+        try {
+            const result = await sendSMS({ to: phone, body });
+
+            await AlertLog.create({
+                user: userId,
+                assignment: assignmentId,
+                taskName,
+                type: 'sms',
+                category,
+                title: 'SMS Notification',
+                message: body,
+                status: result.success ? 'success' : 'failed',
+                errorDetail: result.error,
+                sentAt: new Date()
+            });
+
+            return result;
+        } catch (error: any) {
+            console.error('❌ Error sending SMS notification:', error);
+            await AlertLog.create({
+                user: userId,
+                assignment: assignmentId,
+                taskName,
+                type: 'sms',
+                category,
+                title: 'SMS Notification',
+                message: body,
+                status: 'failed',
+                errorDetail: error.message,
+                sentAt: new Date()
+            }).catch(err => console.error('AlertLog SMS log write fail:', err));
             throw error;
         }
     }

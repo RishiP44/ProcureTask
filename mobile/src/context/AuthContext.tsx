@@ -19,6 +19,7 @@ interface User {
     token?: string;
     department?: string;
     position?: string;
+    phone?: string;
 }
 
 interface AuthContextType {
