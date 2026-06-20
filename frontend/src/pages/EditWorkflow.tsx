@@ -11,6 +11,7 @@ const EditWorkflow = () => {
     
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
+    const [audience, setAudience] = useState<'Employee' | 'Vendor'>('Employee');
     const [tasks, setTasks] = useState<{ _id?: string; name: string; type: string; required: boolean }[]>([]);
     const [loading, setLoading] = useState(true);
     const [version, setVersion] = useState(1);
@@ -29,6 +30,7 @@ const EditWorkflow = () => {
             const res = await api.get(`/workflows/${id}`);
             setName(res.data.name);
             setDescription(res.data.description);
+            setAudience(res.data.audience || 'Employee');
             setTasks(res.data.tasks || []);
             setVersion(res.data.version || 1);
         } catch {
@@ -93,7 +95,7 @@ const EditWorkflow = () => {
     // AI Assisted: Versioning logic & Historical workflow preservation
     const saveWorkflowChanges = async () => {
         try {
-            await api.put(`/workflows/${id}`, { name, description, tasks });
+            await api.put(`/workflows/${id}`, { name, description, audience, tasks });
             toast.success('New workflow version deployed successfully');
             navigate('/workflows');
         } catch (error: any) {
@@ -122,19 +124,19 @@ const EditWorkflow = () => {
                     className="flex items-center gap-2 text-slate-400 hover:text-slate-900 transition-colors text-xs font-bold uppercase tracking-wider mb-4"
                 >
                     <ArrowLeft className="w-4 h-4" />
-                    Back to Registry
+                    Back to Workflows
                 </button>
                 <div className="flex items-center gap-4">
-                    <h1 className="text-4xl pt-title-gradient pt-outfit">Adjust Process Stream</h1>
+                    <h1 className="text-4xl pt-title-gradient pt-outfit">Edit Workflow</h1>
                     <span className="px-3 py-1 text-xs font-black bg-blue-50 text-blue-600 border border-blue-100 rounded-full">Active: v{version}</span>
                 </div>
-                <p className="text-slate-400 text-sm mt-2 font-medium">Engineer and structure standard operations for incoming candidates.</p>
+                <p className="text-slate-400 text-sm mt-2 font-medium">Update the workflow details and tasks.</p>
             </div>
 
             <form onSubmit={handlePreSubmit} className="space-y-8">
                 {/* Information Card */}
                 <div className="pt-glass-card p-8 space-y-6">
-                    <h2 className="text-sm font-black text-slate-900 uppercase tracking-wider border-b border-slate-100 pb-3">Operational Identity</h2>
+                    <h2 className="text-sm font-black text-slate-900 uppercase tracking-wider border-b border-slate-100 pb-3">Workflow Details</h2>
                     
                     <div className="space-y-2">
                         <label className="block text-xs font-extrabold text-slate-400 uppercase tracking-widest">Workflow Name</label>
@@ -147,6 +149,18 @@ const EditWorkflow = () => {
                         />
                     </div>
                     
+                    <div className="space-y-2">
+                        <label className="block text-xs font-extrabold text-slate-400 uppercase tracking-widest">Workflow Audience</label>
+                        <select
+                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium"
+                            value={audience}
+                            onChange={(e) => setAudience(e.target.value as 'Employee' | 'Vendor')}
+                        >
+                            <option value="Employee">Employee workflow</option>
+                            <option value="Vendor">Vendor delivery / procurement workflow</option>
+                        </select>
+                    </div>
+
                     <div className="space-y-2">
                         <label className="block text-xs font-extrabold text-slate-400 uppercase tracking-widest">Definition / Purpose</label>
                         <textarea
@@ -161,7 +175,7 @@ const EditWorkflow = () => {
                 {/* Tasks List Card */}
                 <div className="pt-glass-card p-8">
                     <div className="flex justify-between items-center border-b border-slate-100 pb-3 mb-6">
-                        <h2 className="text-sm font-black text-slate-900 uppercase tracking-wider">Logic Stream Sequences</h2>
+                        <h2 className="text-sm font-black text-slate-900 uppercase tracking-wider">Tasks</h2>
                         <button
                             type="button"
                             onClick={addTask}
@@ -239,7 +253,7 @@ const EditWorkflow = () => {
                             </div>
                         ))}
                         {tasks.length === 0 && (
-                            <p className="text-xs text-slate-400 text-center py-8 font-semibold">No operational sequences specified yet.</p>
+                            <p className="text-xs text-slate-400 text-center py-8 font-semibold">No tasks added yet.</p>
                         )}
                     </div>
                 </div>

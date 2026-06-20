@@ -14,6 +14,13 @@ export const assignWorkflow = async (req: Request, res: Response) => {
 
         const user = await User.findById(userId);
         if (!user) return res.status(404).json({ message: 'User not found' });
+        if (!['Employee', 'Vendor'].includes(user.role)) {
+            return res.status(400).json({ message: 'Workflows can only be assigned to employees or vendors' });
+        }
+        const workflowAudience = workflow.audience || 'Employee';
+        if (workflowAudience !== user.role) {
+            return res.status(400).json({ message: `${workflowAudience} workflows cannot be assigned to ${user.role.toLowerCase()} accounts` });
+        }
 
         const assigner = await User.findById((req as any).user.id);
 
@@ -65,7 +72,7 @@ export const assignWorkflow = async (req: Request, res: Response) => {
 export const getMyAssignments = async (req: Request, res: Response) => {
     try {
         const assignments = await Assignment.find({ user: (req as any).user.id })
-            .populate('workflow', 'name description')
+            .populate('workflow', 'name description audience')
             .populate('assignedBy', 'name')
             .sort({ createdAt: -1 });
         res.json(assignments);
@@ -82,8 +89,8 @@ export const getAllAssignments = async (req: Request, res: Response) => {
         if (userId) filter.user = userId;
 
         const assignments = await Assignment.find(filter)
-            .populate('user', 'name email role department position avatar')
-            .populate('workflow', 'name')
+            .populate('user', 'name email role department position avatar companyName vendorType')
+            .populate('workflow', 'name audience')
             .populate('assignedBy', 'name')
             .sort({ createdAt: -1 });
         res.json(assignments);

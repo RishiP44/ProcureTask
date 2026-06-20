@@ -121,7 +121,11 @@ const AssignmentDetail = () => {
                         {isHR && assignment.user && (
                             <div className="flex items-center gap-2 mt-2">
                                 <User className="w-4 h-4 text-slate-400" />
-                                <span className="text-sm text-slate-500">Assigned to <strong className="text-slate-700">{assignment.user.name}</strong></span>
+                                <span className="text-sm text-slate-500">
+                                    Assigned to <strong className="text-slate-700">
+                                        {assignment.user.role === 'Vendor' && assignment.user.companyName ? `${assignment.user.companyName} (Contact: ${assignment.user.name})` : assignment.user.name}
+                                    </strong>
+                                </span>
                             </div>
                         )}
                         {assignment.assignedBy && (

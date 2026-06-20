@@ -13,6 +13,7 @@ import OfferLetters from './src/pages/OfferLetters';
 import Profile from './src/pages/Profile';
 import EmployeeProfile from './src/pages/EmployeeProfile';
 import AssignmentDetail from './src/pages/AssignmentDetail';
+import VendorBills from './src/pages/VendorBills';
 import { useAuth } from './src/context/AuthContext';
 
 const AppContent = () => {
@@ -53,6 +54,7 @@ const AppContent = () => {
       {currentScreen === 'Profile' && <Profile />}
       {currentScreen === 'Workflows' && <Workflows />}
       {currentScreen === 'Documents' && <Documents />}
+      {currentScreen === 'VendorBills' && <VendorBills />}
     </Layout>
   );
 };

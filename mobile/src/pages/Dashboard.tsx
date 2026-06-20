@@ -39,8 +39,8 @@ const Dashboard = ({ onSelectAssignment, setScreen }: { onSelectAssignment: (id:
             } else {
                 import('react-native').then(({ Alert }) => {
                     Alert.alert(
-                        "Connectivity Error", 
-                        `System unable to reach the central ledger at ${api.defaults.baseURL}. Ensure your device is on the same WiFi as the host machine.`
+                        "Connection Error",
+                        `Could not connect to ${api.defaults.baseURL}. Make sure your phone and computer are on the same Wi-Fi.`
                     );
                 });
             }
@@ -65,19 +65,19 @@ const Dashboard = ({ onSelectAssignment, setScreen }: { onSelectAssignment: (id:
 
         return (
             <View style={styles.header}>
-                <Text style={styles.systemsSub}>SYSTEMS OVERVIEW</Text>
-                <Text style={styles.welcome}>Performance Dashboard</Text>
-                <Text style={styles.date}>Monitoring active workflows for <Text style={{ fontWeight: '800', color: '#0f172a' }}>{user?.name}</Text></Text>
+                <Text style={styles.systemsSub}>OVERVIEW</Text>
+                <Text style={styles.welcome}>Dashboard</Text>
+                <Text style={styles.date}>Work and progress for <Text style={{ fontWeight: '800', color: '#0f172a' }}>{user?.name}</Text></Text>
                 
                 {/* Admin Quick Actions */}
                 {isHR && (
                     <View style={styles.adminActions}>
                         <TouchableOpacity style={styles.primaryBtn} onPress={() => setScreen('Employees')}>
-                            <Text style={styles.primaryBtnText}>Staff Directory</Text>
+                            <Text style={styles.primaryBtnText}>Employees</Text>
                         </TouchableOpacity>
                         <TouchableOpacity style={[styles.primaryBtn, { backgroundColor: '#3b82f6' }]} onPress={() => setScreen('AssignTask')}>
                             <Feather name="send" size={14} color="white" style={{ marginRight: 6 }} />
-                            <Text style={styles.primaryBtnText}>Initiate Flow</Text>
+                            <Text style={styles.primaryBtnText}>Assign Workflow</Text>
                         </TouchableOpacity>
                     </View>
                 )}
@@ -104,7 +104,7 @@ const Dashboard = ({ onSelectAssignment, setScreen }: { onSelectAssignment: (id:
                     </DataBlock>
                     <DataBlock style={[styles.statBox, { borderLeftColor: '#10b981', borderLeftWidth: 4, width: '48%' }]}>
                         <View style={[styles.iconWrap, { backgroundColor: '#ecfdf5' }]}><Feather name="shield" size={16} color="#059669" /></View>
-                        <Text style={styles.statLabel}>Reliability</Text>
+                        <Text style={styles.statLabel}>Completed</Text>
                         <Text style={styles.statValue}>{completionRate}%</Text>
                         <Text style={[styles.statHint, { color: '#10b981' }]}>Completion Rate</Text>
                     </DataBlock>
@@ -126,7 +126,7 @@ const Dashboard = ({ onSelectAssignment, setScreen }: { onSelectAssignment: (id:
                     </View>
                 </DataBlock>
 
-                <WebSectionHeader title={isHR ? "Enterprise Activity Feed" : "My Current Obligations"} />
+                <WebSectionHeader title={isHR ? "Recent Work" : "My Work"} />
             </View>
         );
     };

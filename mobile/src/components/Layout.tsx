@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Platform, StatusBar, Modal, FlatList, TextInput, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Platform, StatusBar, Modal, FlatList, TextInput, ActivityIndicator, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
 import { Feather } from '@expo/vector-icons';
@@ -53,11 +53,10 @@ const Layout: React.FC<LayoutProps> = ({ children, currentScreen, setScreen, onS
 
     const menuItems = [
         { id: 'Dashboard', name: 'Dashboard', icon: 'home', roles: ['Admin', 'HR', 'Employee', 'Vendor'] },
-        { id: 'Employees', name: 'Directory', icon: 'users', roles: ['Admin', 'HR'] },
-        { id: 'AssignTask', name: 'Assign Task', icon: 'send', roles: ['Admin', 'HR'] },
+        { id: 'Employees', name: 'Employees', icon: 'users', roles: ['Admin', 'HR'] },
+        { id: 'VendorBills', name: 'Vendor Bills', icon: 'file-text', roles: ['Vendor'] },
         { id: 'OfferLetters', name: 'Offers', icon: 'mail', roles: ['Admin', 'HR'] },
-        { id: 'Workflows', name: 'Workflows', icon: 'git-merge', roles: ['Admin', 'HR'] },
-        { id: 'Documents', name: 'Vault', icon: 'folder', roles: ['Admin', 'HR'] },
+        { id: 'Workflows', name: 'Workflows & Assign', icon: 'git-merge', roles: ['Admin', 'HR'] },
     ];
 
     const filteredMenu = menuItems.filter(item => item.roles.includes(user?.role || ''));
@@ -69,12 +68,10 @@ const Layout: React.FC<LayoutProps> = ({ children, currentScreen, setScreen, onS
             {/* Flat Corporate Header */}
             <View style={styles.header}>
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <View style={styles.logoBox}>
-                        <Text style={styles.logoText}>P</Text>
-                    </View>
+                    <Image source={require('../../assets/icon.png')} style={styles.logoImage} />
                     <View>
-                        <Text style={styles.brand}>ProcureTrack</Text>
-                        <Text style={styles.brandSub}>SYSTEMS v2.4</Text>
+                        <Text style={styles.brand}>ProcureTask</Text>
+                        <Text style={styles.brandSub}>WORKSPACE</Text>
                     </View>
                 </View>
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -348,20 +345,11 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         backgroundColor: 'white',
     },
-    logoBox: {
+    logoImage: {
         width: 32,
         height: 32,
-        backgroundColor: '#0f172a',
         borderRadius: 8,
-        alignItems: 'center',
-        justifyContent: 'center',
         marginRight: 12
-    },
-    logoText: {
-        color: 'white',
-        fontWeight: '900',
-        fontStyle: 'italic',
-        fontSize: 14
     },
     brand: {
         fontSize: 16,

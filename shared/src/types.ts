@@ -10,6 +10,7 @@ export interface Workflow {
     _id: string;
     name: string;
     description: string;
+    audience?: 'Employee' | 'Vendor';
     tasks?: { _id?: string; name: string; description?: string; type: 'checkbox' | 'document'; required: boolean }[];
     version?: number;
     isLatest?: boolean;

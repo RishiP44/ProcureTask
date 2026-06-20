@@ -15,6 +15,12 @@ export interface IUser extends Document {
     // Invite / offer-letter token
     inviteToken?: string;
     inviteTokenExpiry?: Date;
+    // Vendor profile fields
+    companyName?: string;
+    vendorType?: string;
+    taxId?: string;
+    website?: string;
+    address?: string;
     createdAt: Date;
 }
 
@@ -39,6 +45,11 @@ const UserSchema: Schema = new Schema({
     avatar: { type: String },
     inviteToken: { type: String },
     inviteTokenExpiry: { type: Date },
+    companyName: { type: String },
+    vendorType: { type: String },
+    taxId: { type: String },
+    website: { type: String },
+    address: { type: String },
 }, { timestamps: true });
 
 export default mongoose.model<IUser>('User', UserSchema);

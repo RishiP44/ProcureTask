@@ -10,6 +10,7 @@ export interface ITaskTemplate {
 export interface IWorkflow extends Document {
     name: string;
     description: string;
+    audience: 'Employee' | 'Vendor';
     tasks: ITaskTemplate[];
     createdBy: mongoose.Types.ObjectId;
     version: number;
@@ -30,6 +31,7 @@ const TaskTemplateSchema = new Schema({
 const WorkflowSchema: Schema = new Schema({
     name: { type: String, required: true },
     description: { type: String },
+    audience: { type: String, enum: ['Employee', 'Vendor'], default: 'Employee', required: true },
     tasks: [TaskTemplateSchema],
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     version: { type: Number, default: 1, required: true },

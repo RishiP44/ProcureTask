@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Alert, ActivityIndicator, Image } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as DocumentPicker from 'expo-document-picker';
 import { DataBlock, WebSectionHeader } from '../components/Theme';
 import { useAuth } from '../context/AuthContext';
 import { Feather } from '@expo/vector-icons';
@@ -12,6 +13,8 @@ const Profile = () => {
     const [name, setName] = useState('');
     const [phone, setPhone] = useState('');
     const [saving, setSaving] = useState(false);
+    const [avatar, setAvatar] = useState('');
+    const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
     useEffect(() => {
         if (user) {
@@ -22,6 +25,7 @@ const Profile = () => {
                 .then(res => {
                     setName(res.data.name || '');
                     setPhone(res.data.phone || '');
+                    setAvatar(res.data.avatar || '');
                 })
                 .catch(err => console.log('Error fetching user info:', err));
         }
@@ -58,14 +62,44 @@ const Profile = () => {
         }
     };
 
+    const choosePhoto = async () => {
+        const result = await DocumentPicker.getDocumentAsync({ type: 'image/*', copyToCacheDirectory: true });
+        if (result.canceled || !result.assets[0]) return;
+        const asset = result.assets[0];
+        setUploadingPhoto(true);
+        try {
+            const data = new FormData();
+            data.append('file', {
+                uri: asset.uri,
+                name: asset.name || `profile-${Date.now()}.jpg`,
+                type: asset.mimeType || 'image/jpeg'
+            } as any);
+            const upload = await api.post('/upload', data, { headers: { 'Content-Type': 'multipart/form-data' } });
+            const updated = await api.put(`/users/${user?._id}`, { name, phone, avatar: upload.data.filePath });
+            setAvatar(updated.data.avatar || '');
+            const stored = await AsyncStorage.getItem('user');
+            if (stored) {
+                const parsed = JSON.parse(stored);
+                parsed.avatar = updated.data.avatar;
+                await AsyncStorage.setItem('user', JSON.stringify(parsed));
+            }
+            Alert.alert('Photo updated', 'Your profile photo has been saved.');
+        } catch (error: any) {
+            Alert.alert('Upload failed', error.response?.data?.message || 'Could not upload the photo.');
+        } finally {
+            setUploadingPhoto(false);
+        }
+    };
+
     return (
         <View style={styles.container}>
-            <WebSectionHeader title="System Identity Profile" />
+            <WebSectionHeader title="My Profile" />
             <ScrollView contentContainerStyle={{ paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
                 <DataBlock style={styles.content}>
-                    <View style={styles.avatar}>
-                        <Text style={styles.avatarText}>{(name || 'U').charAt(0).toUpperCase()}</Text>
-                    </View>
+                    <TouchableOpacity style={styles.avatar} onPress={choosePhoto} disabled={uploadingPhoto}>
+                        {avatar ? <Image source={{ uri: `${String(api.defaults.baseURL || '').replace(/\/api\/?$/, '')}${avatar}` }} style={styles.avatarImage} /> : <Text style={styles.avatarText}>{(name || 'U').charAt(0).toUpperCase()}</Text>}
+                        <View style={styles.cameraBadge}>{uploadingPhoto ? <ActivityIndicator size="small" color="#0f172a" /> : <Feather name="camera" size={14} color="#0f172a" />}</View>
+                    </TouchableOpacity>
 
                     {editMode ? (
                         <TextInput 
@@ -82,15 +116,15 @@ const Profile = () => {
 
                     <View style={styles.infoBox}>
                         <View style={styles.infoRow}>
-                            <Text style={styles.infoLabel}>System ID</Text>
+                            <Text style={styles.infoLabel}>Account ID</Text>
                             <Text style={styles.infoValue}>{user?._id || 'SYS-UNDEF'}</Text>
                         </View>
                         <View style={styles.infoRow}>
-                            <Text style={styles.infoLabel}>Access Hierarchy</Text>
-                            <Text style={styles.infoValue}>{(user?.role === 'Admin' || user?.role === 'HR') ? 'Level-1 Executive' : 'Level-2 Staff'}</Text>
+                            <Text style={styles.infoLabel}>Role</Text>
+                            <Text style={styles.infoValue}>{user?.role}</Text>
                         </View>
                         <View style={styles.infoRow}>
-                            <Text style={styles.infoLabel}>Phone Endpoint</Text>
+                            <Text style={styles.infoLabel}>Phone</Text>
                             {editMode ? (
                                 <TextInput 
                                     style={styles.inlineInput} 
@@ -100,7 +134,7 @@ const Profile = () => {
                                     keyboardType="phone-pad"
                                 />
                             ) : (
-                                <Text style={styles.infoValue}>{phone || 'Not Configured'}</Text>
+                                <Text style={styles.infoValue}>{phone || 'Not added'}</Text>
                             )}
                         </View>
                         <View style={styles.infoRow}>
@@ -131,13 +165,13 @@ const Profile = () => {
                         ) : (
                             <TouchableOpacity style={[styles.actionBtn, styles.editBtn]} onPress={() => setEditMode(true)}>
                                 <Feather name="edit-2" size={16} color="white" style={{ marginRight: 8 }} />
-                                <Text style={styles.actionBtnText}>Modify Identity</Text>
+                                <Text style={styles.actionBtnText}>Edit Profile</Text>
                             </TouchableOpacity>
                         )}
 
                         <TouchableOpacity style={styles.logoutBtn} onPress={logout}>
                             <Feather name="log-out" size={16} color="white" style={{ marginRight: 8 }} />
-                            <Text style={styles.logoutText}>Terminate Session</Text>
+                            <Text style={styles.logoutText}>Logout</Text>
                         </TouchableOpacity>
                     </View>
                 </DataBlock>
@@ -150,6 +184,8 @@ const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#f8fafc' },
     content: { padding: 30, alignItems: 'center' },
     avatar: { width: 80, height: 80, borderRadius: 40, backgroundColor: '#0f172a', alignItems: 'center', justifyContent: 'center', marginBottom: 20 },
+    avatarImage: { width: 80, height: 80, borderRadius: 40 },
+    cameraBadge: { position: 'absolute', right: -3, bottom: -3, width: 28, height: 28, borderRadius: 14, backgroundColor: 'white', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#e2e8f0' },
     avatarText: { fontSize: 32, fontWeight: '900', color: 'white' },
     name: { fontSize: 24, fontWeight: '800', color: '#0f172a', marginBottom: 4 },
     nameInput: { fontSize: 20, fontWeight: '800', color: '#0f172a', borderBottomWidth: 1, borderBottomColor: '#cbd5e1', width: '80%', textAlign: 'center', marginBottom: 4, paddingVertical: 4 },

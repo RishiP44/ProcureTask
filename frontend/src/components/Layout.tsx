@@ -4,12 +4,13 @@ import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-    LayoutDashboard, Users, Workflow, FileText, 
-    User, LogOut, Menu, SendHorizontal, Bell,
-    Mail, ClipboardList, ChevronDown
+    LayoutDashboard, Users, Workflow, Building2,
+    User, LogOut, Menu, Bell,
+    Mail, ClipboardList, ChevronDown, BarChart3
 } from 'lucide-react';
 import HeaderSearch from './HeaderSearch';
 import toast from 'react-hot-toast';
+import procureTaskLogo from '../assets/procuretask-logo.png';
 
 
 interface NavItem {
@@ -110,12 +111,12 @@ const Layout = () => {
     const navItems: NavItem[] = [
         { name: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard className="w-4 h-4" />, roles: ['Admin', 'HR', 'Employee', 'Vendor'] },
         { name: 'Employees', path: '/employees', icon: <Users className="w-4 h-4" />, roles: ['Admin', 'HR'] },
-        { name: 'Assign Task', path: '/assign', icon: <SendHorizontal className="w-4 h-4" />, roles: ['Admin', 'HR'] },
+        { name: 'Vendors', path: '/vendors', icon: <Building2 className="w-4 h-4" />, roles: ['Admin', 'HR'] },
         { name: 'Offer Letters', path: '/offer-letters', icon: <Mail className="w-4 h-4" />, roles: ['Admin', 'HR'] },
-        { name: 'Workflows', path: '/workflows', icon: <Workflow className="w-4 h-4" />, roles: ['Admin', 'HR'] },
-        { name: 'Documents', path: '/documents', icon: <FileText className="w-4 h-4" />, roles: ['Admin', 'HR'] },
+        { name: 'Workflows & Assignments', path: '/workflows', icon: <Workflow className="w-4 h-4" />, roles: ['Admin', 'HR'] },
         { name: 'Alerts & Reminders', path: '/notifications-panel', icon: <Bell className="w-4 h-4" />, roles: ['Admin', 'HR'] },
         { name: 'My Tasks', path: '/my-tasks', icon: <ClipboardList className="w-4 h-4" />, roles: ['Employee', 'Vendor'] },
+        { name: 'Reports', path: '/reports', icon: <BarChart3 className="w-4 h-4" />, roles: ['Admin', 'HR', 'Employee', 'Vendor'] },
         { name: 'My Profile', path: '/profile', icon: <User className="w-4 h-4" />, roles: ['Admin', 'HR', 'Employee', 'Vendor'] },
     ];
 
@@ -126,9 +127,9 @@ const Layout = () => {
             {/* Logo */}
             <div className="px-8 py-12">
                 <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-slate-900 rounded-lg flex items-center justify-center text-white font-black italic">P</div>
+                    <img src={procureTaskLogo} alt="" className="w-8 h-8 rounded-lg object-cover" />
                     <div>
-                        <div className="font-extrabold text-slate-900 text-lg tracking-tighter pt-outfit">ProcureTrack</div>
+                        <div className="font-extrabold text-slate-900 text-lg tracking-tighter pt-outfit">ProcureTask</div>
                         <div className="text-[9px] font-extrabold text-blue-500 uppercase tracking-widest leading-none mt-0.5">Systems v2.4</div>
                     </div>
                 </div>
@@ -171,7 +172,7 @@ const Layout = () => {
                     className="flex items-center gap-3 w-full px-4 py-3 text-[10px] font-extrabold text-rose-500 uppercase tracking-widest hover:bg-rose-50 rounded-xl transition-all"
                 >
                     <LogOut className="w-4 h-4" />
-                    Logout Session
+                    Logout
                 </button>
             </div>
         </div>
@@ -318,7 +319,7 @@ const Layout = () => {
                                             </Link>
                                             <button onClick={handleLogout} className="flex items-center gap-3 w-full text-left px-6 py-3 text-[10px] font-extrabold text-rose-500 uppercase tracking-widest hover:bg-rose-50">
                                                 <LogOut className="w-3.5 h-3.5" />
-                                                Disconnect
+                                                Logout
                                             </button>
                                         </div>
                                     </motion.div>

@@ -119,7 +119,7 @@ const OfferLetters = () => {
                         <TrendingUp className="w-4 h-4 text-emerald-500" />
                     </div>
                     <div className="text-3xl font-black text-slate-900 pt-outfit">{stats.total}</div>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Total Dispatched</p>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Total Sent</p>
                 </div>
                 <div className="pt-glass-card p-6 border-b-2 border-b-amber-400">
                     <div className="flex items-center justify-between mb-4">
@@ -238,7 +238,7 @@ const OfferLetters = () => {
                                         <input className="pt-input" placeholder="Senior Architect" value={form.position} onChange={e => setForm({ ...form, position: e.target.value })} required />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="pt-label">Operational Hub</label>
+                                        <label className="pt-label">Department</label>
                                         <input className="pt-input" placeholder="Engineering / R&D" value={form.department} onChange={e => setForm({ ...form, department: e.target.value })} required />
                                     </div>
                                     <div className="space-y-2">
@@ -255,7 +255,7 @@ const OfferLetters = () => {
                                     <button type="button" onClick={() => setShowModal(false)} className="pt-btn-secondary flex-1 py-4">Cancel Execution</button>
                                     <button type="submit" disabled={submitting} className="pt-btn-primary flex-1 py-4">
                                         {submitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <SendHorizontal className="w-5 h-5" />}
-                                        {submitting ? 'Dispatching...' : 'Initiate Delivery'}
+                                        {submitting ? 'Sending...' : 'Send Offer'}
                                     </button>
                                 </div>
                             </form>

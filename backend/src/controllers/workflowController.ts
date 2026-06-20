@@ -7,7 +7,7 @@ import Assignment from '../models/Assignment';
 // @access  Private (Admin/HR)
 export const createWorkflow = async (req: Request, res: Response) => {
     try {
-        const { name, description, tasks } = req.body;
+        const { name, description, tasks, audience } = req.body;
 
         // Basic validation
         if (!tasks || tasks.length === 0) {
@@ -18,6 +18,7 @@ export const createWorkflow = async (req: Request, res: Response) => {
             name,
             description,
             tasks,
+            audience: audience || 'Employee',
             createdBy: (req as any).user.id,
         });
 
@@ -33,7 +34,14 @@ export const createWorkflow = async (req: Request, res: Response) => {
 export const getWorkflows = async (req: Request, res: Response) => {
     try {
         // Only return the latest version of workflows that are not archived
-        const workflows = await Workflow.find({ isLatest: true, isArchived: false }).sort({ createdAt: -1 });
+        const filter: any = { isLatest: true, isArchived: false };
+        const requestedAudience = req.query.audience || (['Employee', 'Vendor'].includes((req as any).user.role) ? (req as any).user.role : undefined);
+        if (requestedAudience === 'Employee') {
+            filter.$or = [{ audience: 'Employee' }, { audience: { $exists: false } }];
+        } else if (requestedAudience === 'Vendor') {
+            filter.audience = 'Vendor';
+        }
+        const workflows = await Workflow.find(filter).sort({ createdAt: -1 });
         res.json(workflows);
     } catch (error) {
         res.status(500).json({ message: 'Server Error', error });
@@ -61,7 +69,7 @@ export const getWorkflowById = async (req: Request, res: Response) => {
 // @access  Private (Admin/HR)
 export const updateWorkflow = async (req: Request, res: Response) => {
     try {
-        const { name, description, tasks } = req.body;
+        const { name, description, tasks, audience } = req.body;
         const currentWorkflow = await Workflow.findById(req.params.id);
 
         if (!currentWorkflow) {
@@ -77,6 +85,7 @@ export const updateWorkflow = async (req: Request, res: Response) => {
             name: name || currentWorkflow.name,
             description: description || currentWorkflow.description,
             tasks: tasks || currentWorkflow.tasks,
+            audience: audience || currentWorkflow.audience || 'Employee',
             createdBy: (req as any).user.id,
             version: currentWorkflow.version + 1,
             rootId: currentWorkflow.rootId || currentWorkflow._id,

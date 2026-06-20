@@ -55,7 +55,7 @@ export const registerUser = async (req: Request, res: Response) => {
             name,
             email,
             passwordHash,
-            role: role || 'Employee',
+            role: 'Employee',
             status: 'Active',
         });
 
@@ -92,6 +92,8 @@ export const loginUser = async (req: Request, res: Response) => {
                 position: user.position,
                 avatar: user.avatar,
                 status: user.status,
+                companyName: user.companyName,
+                vendorType: user.vendorType,
                 token: generateToken(user.id, user.role),
             });
         } else {
@@ -104,9 +106,17 @@ export const loginUser = async (req: Request, res: Response) => {
 
 // @desc Invite a user by email (HR/Admin only)
 export const inviteUser = async (req: Request, res: Response) => {
-    const { name, email, role, department, position } = req.body;
+    const { name, email, role, department, position, companyName, vendorType, taxId, website, address } = req.body;
 
     try {
+        const actorRole = (req as any).user?.role;
+        const requestedRole = role || 'Employee';
+        if (!['Employee', 'Vendor', 'HR', 'Admin'].includes(requestedRole)) {
+            return res.status(400).json({ message: 'Invalid account role' });
+        }
+        if (actorRole !== 'Admin' && ['Admin', 'HR'].includes(requestedRole)) {
+            return res.status(403).json({ message: 'Only administrators can create privileged accounts' });
+        }
         const existing = await User.findOne({ email });
         if (existing) {
             return res.status(400).json({ message: 'A user with this email already exists' });
@@ -119,12 +129,17 @@ export const inviteUser = async (req: Request, res: Response) => {
             name: name || email.split('@')[0],
             email,
             passwordHash: '',
-            role: role || 'Employee',
-            department,
-            position,
+            role: requestedRole,
+            department: ['Employee', 'HR'].includes(requestedRole) ? department : undefined,
+            position: ['Employee', 'HR'].includes(requestedRole) ? position : undefined,
             status: 'Invited',
             inviteToken,
             inviteTokenExpiry,
+            companyName: requestedRole === 'Vendor' ? companyName : undefined,
+            vendorType: requestedRole === 'Vendor' ? vendorType : undefined,
+            taxId: requestedRole === 'Vendor' ? taxId : undefined,
+            website: requestedRole === 'Vendor' ? website : undefined,
+            address: requestedRole === 'Vendor' ? address : undefined
         });
 
         await sendInviteEmail({

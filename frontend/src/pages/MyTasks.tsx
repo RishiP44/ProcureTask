@@ -30,7 +30,7 @@ const MyTasks = () => {
             try {
                 const res = await api.get('/assignments/my-assignments');
                 setAssignments(res.data);
-            } catch { toast.error('Insecure task link'); }
+            } catch { toast.error('Could not load your tasks'); }
             finally { setLoading(false); }
         };
         fetchTasks();
@@ -71,14 +71,14 @@ const MyTasks = () => {
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
                 <div>
-                    <h2 className="text-[10px] font-extrabold text-blue-500 uppercase tracking-[0.3em] mb-2">Personal Hub</h2>
-                    <h1 className="text-4xl pt-title-gradient pt-outfit">My Active Tasks</h1>
-                    <p className="text-slate-400 text-sm mt-3 font-medium">Tracking <span className="text-slate-900 font-bold">{totalTasks}</span> operational obligations across all flows.</p>
+                    <h2 className="text-[10px] font-extrabold text-blue-500 uppercase tracking-[0.3em] mb-2">My Work</h2>
+                    <h1 className="text-4xl pt-title-gradient pt-outfit">My Tasks</h1>
+                    <p className="text-slate-400 text-sm mt-3 font-medium"><span className="text-slate-900 font-bold">{totalTasks}</span> tasks across your assigned workflows.</p>
                 </div>
                 <div className="pt-glass-card p-4 flex items-center gap-6 min-w-[300px]">
                     <div className="flex-1">
                         <div className="flex justify-between mb-2">
-                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Global Progress</span>
+                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Overall Progress</span>
                             <span className="text-[10px] font-black text-blue-600">{progress}%</span>
                         </div>
                         <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
@@ -108,7 +108,7 @@ const MyTasks = () => {
                             <div className="p-3 bg-slate-50 rounded-xl">{s.icon}</div>
                             <div>
                                 <div className="text-sm font-black text-slate-900 pt-outfit uppercase tracking-tight">{s.label}</div>
-                                <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-0.5">{stats[s.key as keyof typeof stats]} Operations</div>
+                                <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-0.5">{stats[s.key as keyof typeof stats]} Workflows</div>
                             </div>
                         </div>
                     </button>
@@ -159,7 +159,7 @@ const MyTasks = () => {
                                         <div className="flex items-center gap-1.5">
                                             <Zap className="w-3.5 h-3.5 text-amber-500" />
                                             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                                                {assignment.tasks?.length || 0} Critical Steps
+                                                {assignment.tasks?.length || 0} Tasks
                                             </span>
                                         </div>
                                         <div className="flex items-center gap-1.5">
@@ -198,8 +198,8 @@ const MyTasks = () => {
                 {filtered.length === 0 && (
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="py-24 text-center pt-glass-card">
                         <Activity className="w-12 h-12 text-slate-200 mx-auto mb-6" />
-                        <h3 className="text-sm font-black text-slate-400 uppercase tracking-[0.2em]">Zero Operational Context Identified</h3>
-                        <p className="text-slate-300 text-xs font-medium mt-2">No tasks matching your current filter parameters.</p>
+                        <h3 className="text-sm font-black text-slate-400 uppercase tracking-[0.2em]">No Tasks Found</h3>
+                        <p className="text-slate-300 text-xs font-medium mt-2">Try a different search or filter.</p>
                     </motion.div>
                 )}
             </div>

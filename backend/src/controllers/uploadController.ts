@@ -12,7 +12,7 @@ const storage = multer.diskStorage({
 });
 
 const checkFileType = (file: Express.Multer.File, cb: multer.FileFilterCallback) => {
-    const filetypes = /jpg|jpeg|png|pdf/;
+    const filetypes = /jpg|jpeg|png|webp|pdf/;
     const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
     const mimetype = filetypes.test(file.mimetype);
 
@@ -34,7 +34,7 @@ export const uploadFile = (req: Request, res: Response) => {
     if (req.file) {
         res.send({
             message: 'File uploaded successfully',
-            filePath: `/${req.file.path}`,
+            filePath: `/uploads/${req.file.filename}`,
             filename: req.file.filename
         });
     } else {

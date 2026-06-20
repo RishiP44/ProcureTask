@@ -250,7 +250,7 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ isOpen, onClose }) =>
                         {/* Footer Tips */}
                         <div className="px-6 py-3 bg-slate-50 border-t border-slate-100 flex justify-between items-center text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
                             <span>Navigation: Click to jump</span>
-                            <span>Powered by ProcureTrack</span>
+                            <span>Powered by ProcureTask</span>
                         </div>
                     </motion.div>
                 </div>

@@ -7,16 +7,17 @@ import Dashboard from './pages/Dashboard';
 import Workflows from './pages/Workflows';
 import CreateWorkflow from './pages/CreateWorkflow';
 import EditWorkflow from './pages/EditWorkflow';
-import AssignWorkflow from './pages/AssignWorkflow';
 import AssignmentDetail from './pages/AssignmentDetail';
-import Documents from './pages/Documents';
 import Employees from './pages/Employees';
 import EmployeeProfile from './pages/EmployeeProfile';
+import Vendors from './pages/Vendors';
+import VendorBills from './pages/VendorBills';
 import OfferLetters from './pages/OfferLetters';
 import OfferLetterAccept from './pages/OfferLetterAccept';
 import MyTasks from './pages/MyTasks';
 import Profile from './pages/Profile';
 import NotificationsPanel from './pages/NotificationsPanel';
+import Reports from './pages/Reports';
 
 
 import { Toaster } from 'react-hot-toast';
@@ -42,12 +43,15 @@ function AnimatedRoutes() {
                         {/* HR / Admin routes */}
                         <Route path="/employees" element={<Employees />} />
                         <Route path="/employees/:id" element={<EmployeeProfile />} />
-                        <Route path="/assign" element={<AssignWorkflow />} />
+                        <Route path="/vendors" element={<Vendors />} />
+                        <Route path="/vendors/:id" element={<EmployeeProfile />} />
+                        <Route path="/vendor-bills" element={<VendorBills />} />
+                        <Route path="/assign" element={<Navigate to="/workflows?tab=assign" replace />} />
                         <Route path="/offer-letters" element={<OfferLetters />} />
                         <Route path="/workflows" element={<Workflows />} />
                         <Route path="/workflows/create" element={<CreateWorkflow />} />
                         <Route path="/workflows/:id/edit" element={<EditWorkflow />} />
-                        <Route path="/documents" element={<Documents />} />
+                        <Route path="/documents" element={<Navigate to="/employees" replace />} />
                         <Route path="/notifications-panel" element={<NotificationsPanel />} />
 
                         {/* Employee routes */}
@@ -56,6 +60,7 @@ function AnimatedRoutes() {
                         {/* Shared */}
                         <Route path="/assignments/:id" element={<AssignmentDetail />} />
                         <Route path="/profile" element={<Profile />} />
+                        <Route path="/reports" element={<Reports />} />
 
                         <Route path="/" element={<Navigate to="/dashboard" />} />
                     </Route>

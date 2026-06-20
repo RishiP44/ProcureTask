@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import toast from 'react-hot-toast';
+import procureTaskLogo from '../assets/procuretask-logo.png';
 import {
     Briefcase, Calendar, Building2, DollarSign, CheckCircle2,
     XCircle, Loader2, Lock, User, Clock, ArrowRight
@@ -82,9 +83,7 @@ const OfferLetterAccept = () => {
             {/* Header */}
             <div className="bg-gradient-to-r from-blue-800 to-blue-600 text-white py-5 px-6">
                 <div className="max-w-3xl mx-auto flex items-center gap-3">
-                    <div className="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center">
-                        <Briefcase className="w-5 h-5 text-white" />
-                    </div>
+                    <img src={procureTaskLogo} alt="" className="w-9 h-9 rounded-xl object-cover" />
                     <div>
                         <h1 className="font-bold text-lg">ProcureTask</h1>
                         <p className="text-blue-200 text-xs">HR & Workforce Management</p>

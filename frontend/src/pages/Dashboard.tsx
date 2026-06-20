@@ -8,7 +8,7 @@ import {
 } from 'recharts';
 import {
     Users, Clock, Activity, ShieldCheck, SendHorizontal, BarChart3,
-    ChevronRight
+    ChevronRight, ReceiptText
 } from 'lucide-react';
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444'];
@@ -20,6 +20,7 @@ const Dashboard = () => {
     const [hrStats, setHRStats] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const isHR = user?.role === 'Admin' || user?.role === 'HR';
+    const isVendor = user?.role === 'Vendor';
 
     useEffect(() => {
         const fetchData = async () => {
@@ -87,20 +88,26 @@ const Dashboard = () => {
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
-                    <h2 className="text-[10px] font-extrabold text-blue-500 uppercase tracking-[0.3em] mb-2">Systems Overview</h2>
-                    <h1 className="text-4xl pt-title-gradient pt-outfit">Performance Dashboard</h1>
-                    <p className="text-slate-400 text-sm mt-3 font-medium">Monitoring active onboarding workflows for <span className="text-slate-900 font-bold">{user?.name}</span></p>
+                    <h2 className="text-[10px] font-extrabold text-blue-500 uppercase tracking-[0.3em] mb-2">Overview</h2>
+                    <h1 className="text-4xl pt-title-gradient pt-outfit">Dashboard</h1>
+                    <p className="text-slate-400 text-sm mt-3 font-medium">Work and progress for <span className="text-slate-900 font-bold">{user?.name}</span></p>
                 </div>
                 {isHR && (
                     <div className="flex items-center gap-3">
                         <Link to="/employees" className="pt-btn-primary">
-                            Staff Directory
+                            Employees
                         </Link>
                         <Link to="/assign" className="pt-btn-accent">
                             <SendHorizontal className="w-3.5 h-3.5" />
-                            Initiate Flow
+                            Assign Workflow
                         </Link>
                     </div>
+                )}
+                {isVendor && (
+                    <Link to="/vendor-bills" className="pt-btn-primary">
+                        <ReceiptText className="w-4 h-4" />
+                        Submit Audited Bill
+                    </Link>
                 )}
             </div>
 
@@ -135,7 +142,7 @@ const Dashboard = () => {
                 <motion.div variants={itemVariants} className="pt-glass-card p-6 border-l-4 border-l-emerald-500">
                     <div className="flex items-center justify-between mb-4">
                         <div className="p-2 bg-emerald-50 rounded-lg text-emerald-600"><ShieldCheck className="w-5 h-5" /></div>
-                        <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Reliability</span>
+                        <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Completed</span>
                     </div>
                     <div className="text-3xl font-black text-slate-900 pt-outfit">{total > 0 ? Math.round((completed/total)*100) : 0}%</div>
                     <p className="text-[10px] font-bold text-emerald-500 uppercase mt-2">Completion Rate</p>
@@ -193,7 +200,7 @@ const Dashboard = () => {
                     <div className="p-8 border-b border-slate-50 flex items-center justify-between bg-slate-50/30">
                         <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
                             <Activity className="w-3.5 h-3.5 text-blue-600" />
-                            {isHR ? 'Enterprise Activity Feed' : 'My Current Obligations'}
+                            {isHR ? 'Recent Work' : 'My Work'}
                         </h3>
                     </div>
                     <div className="flex-1 overflow-x-auto">
@@ -214,10 +221,16 @@ const Dashboard = () => {
                                             {isHR && (
                                                 <td className="px-8 py-5">
                                                     <div className="flex items-center gap-3">
-                                                        <div className="w-7 h-7 bg-slate-100 rounded-full flex items-center justify-center text-[10px] font-bold text-slate-600">{a.user?.name?.charAt(0)}</div>
+                                                        <div className="w-7 h-7 bg-slate-100 rounded-full flex items-center justify-center text-[10px] font-bold text-slate-600">
+                                                            {(a.user?.companyName || a.user?.name)?.charAt(0)}
+                                                        </div>
                                                         <div>
-                                                            <div className="text-xs font-black text-slate-900 uppercase">{a.user?.name}</div>
-                                                            <div className="text-[9px] text-slate-400 font-bold uppercase">{a.user?.role}</div>
+                                                            <div className="text-xs font-black text-slate-900 uppercase">
+                                                                {a.user?.role === 'Vendor' && a.user?.companyName ? a.user.companyName : a.user?.name}
+                                                            </div>
+                                                            <div className="text-[9px] text-slate-400 font-bold uppercase">
+                                                                {a.user?.role === 'Vendor' ? `Vendor Partner • ${a.user?.name}` : a.user?.role}
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </td>
@@ -247,7 +260,7 @@ const Dashboard = () => {
                                 {assignments.length === 0 && (
                                     <tr>
                                         <td colSpan={isHR ? 4 : 3} className="py-20 text-center text-slate-300 text-[10px] font-black uppercase tracking-widest">
-                                            No active streams detected.
+                                            No workflows found.
                                         </td>
                                     </tr>
                                 )}
@@ -256,7 +269,7 @@ const Dashboard = () => {
                     </div>
                     {assignments.length > 5 && (
                         <div className="p-4 border-t border-slate-50 bg-slate-50/10 text-center">
-                            <button className="text-[10px] font-black text-blue-600 uppercase tracking-widest hover:underline">View Entire Registry</button>
+                            <button className="text-[10px] font-black text-blue-600 uppercase tracking-widest hover:underline">View All</button>
                         </div>
                     )}
                 </motion.div>

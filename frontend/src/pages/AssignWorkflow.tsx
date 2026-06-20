@@ -7,15 +7,17 @@ import { ClipboardList, Users, Workflow, Search, Loader2, Check, ArrowRight, Che
 const getInitials = (name: string) =>
     name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || '?';
 
-const AssignWorkflow = () => {
+const AssignWorkflow = ({ embedded = false }: { embedded?: boolean }) => {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const preselectedUser = searchParams.get('userId') || '';
+    const preselectedWorkflow = searchParams.get('workflowId') || '';
 
     const [users, setUsers] = useState<any[]>([]);
     const [workflows, setWorkflows] = useState<any[]>([]);
     const [selectedUser, setSelectedUser] = useState(preselectedUser);
-    const [selectedWorkflow, setSelectedWorkflow] = useState('');
+    const [selectedWorkflow, setSelectedWorkflow] = useState(preselectedWorkflow);
+    const [targetRole, setTargetRole] = useState<'Employee' | 'Vendor'>('Employee');
     const [userSearch, setUserSearch] = useState('');
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
@@ -29,8 +31,11 @@ const AssignWorkflow = () => {
                     api.get('/users'),
                     api.get('/workflows'),
                 ]);
-                setUsers(usersRes.data);
+                setUsers(usersRes.data.filter((item: any) => ['Employee', 'Vendor'].includes(item.role)));
                 setWorkflows(workflowsRes.data);
+                const initialUser = usersRes.data.find((item: any) => item._id === preselectedUser);
+                const initialWorkflow = workflowsRes.data.find((item: any) => item._id === preselectedWorkflow);
+                if (initialUser?.role === 'Vendor' || initialWorkflow?.audience === 'Vendor') setTargetRole('Vendor');
             } catch { toast.error('Failed to load data'); }
             finally { setLoading(false); }
         };
@@ -57,11 +62,14 @@ const AssignWorkflow = () => {
         } finally { setSubmitting(false); }
     };
 
-    const filteredUsers = users.filter(u =>
-        u.name?.toLowerCase().includes(userSearch.toLowerCase()) ||
-        u.email?.toLowerCase().includes(userSearch.toLowerCase()) ||
-        u.department?.toLowerCase().includes(userSearch.toLowerCase())
-    );
+    const filteredUsers = users.filter(u => u.role === targetRole && (
+        (u.name || '').toLowerCase().includes(userSearch.toLowerCase()) ||
+        (u.email || '').toLowerCase().includes(userSearch.toLowerCase()) ||
+        (u.department || '').toLowerCase().includes(userSearch.toLowerCase()) ||
+        (u.companyName || '').toLowerCase().includes(userSearch.toLowerCase()) ||
+        (u.vendorType || '').toLowerCase().includes(userSearch.toLowerCase())
+    ));
+    const eligibleWorkflows = workflows.filter(w => (w.audience || 'Employee') === targetRole);
 
     const selectedUserData = users.find(u => u._id === selectedUser);
     const selectedWorkflowData = workflows.find(w => w._id === selectedWorkflow);
@@ -98,11 +106,19 @@ const AssignWorkflow = () => {
 
     return (
         <div className="animate-fade-in-up max-w-4xl mx-auto">
-            <div className="pt-page-header">
+            {!embedded && <div className="pt-page-header">
                 <div>
                     <h1 className="pt-page-title">Assign Workflow</h1>
                     <p className="pt-page-subtitle">Select an employee and a workflow to assign</p>
                 </div>
+            </div>}
+            <div className="pt-card p-2 mb-6 inline-flex gap-2">
+                {(['Employee', 'Vendor'] as const).map(role => (
+                    <button type="button" key={role} onClick={() => { setTargetRole(role); setSelectedUser(''); setSelectedWorkflow(''); }}
+                        className={`px-5 py-2 rounded-xl text-xs font-black uppercase tracking-wider ${targetRole === role ? 'bg-slate-900 text-white' : 'text-slate-500'}`}>
+                        {role} Assignment
+                    </button>
+                ))}
             </div>
 
             <form onSubmit={handleSubmit}>
@@ -111,7 +127,7 @@ const AssignWorkflow = () => {
                     <div className="pt-card overflow-hidden">
                         <div className="px-5 py-4 border-b border-slate-100">
                             <h3 className="font-semibold text-slate-900 flex items-center gap-2">
-                                <Users className="w-4 h-4 text-blue-600" /> Select Employee
+                                <Users className="w-4 h-4 text-blue-600" /> Select {targetRole}
                             </h3>
                         </div>
                         <div className="p-4">
@@ -127,10 +143,14 @@ const AssignWorkflow = () => {
                                         <input type="radio" name="user" value={user._id}
                                             checked={selectedUser === user._id}
                                             onChange={() => setSelectedUser(user._id)} className="sr-only" />
-                                        <div className="pt-avatar-sm text-xs flex-shrink-0">{getInitials(user.name)}</div>
+                                        <div className="pt-avatar-sm text-xs flex-shrink-0">{getInitials(user.companyName || user.name)}</div>
                                         <div className="flex-1 min-w-0">
-                                            <div className="text-sm font-semibold text-slate-900 truncate">{user.name}</div>
-                                            <div className="text-xs text-slate-400 truncate">{user.role} {user.department ? `· ${user.department}` : ''}</div>
+                                            <div className="text-sm font-semibold text-slate-900 truncate">
+                                                {user.role === 'Vendor' && user.companyName ? user.companyName : user.name}
+                                            </div>
+                                            <div className="text-xs text-slate-400 truncate">
+                                                {user.role === 'Vendor' ? `Vendor Partner • ${user.vendorType || 'Partner'}` : `${user.role} ${user.department ? `· ${user.department}` : ''}`}
+                                            </div>
                                         </div>
                                         {selectedUser === user._id && (
                                             <Check className="w-4 h-4 text-blue-600 flex-shrink-0" />
@@ -153,7 +173,7 @@ const AssignWorkflow = () => {
                         </div>
                         <div className="p-4">
                             <div className="space-y-2 max-h-80 overflow-y-auto">
-                                {workflows.map(wf => (
+                                {eligibleWorkflows.map(wf => (
                                     <label key={wf._id}
                                         className={`flex items-start gap-3 p-4 rounded-xl cursor-pointer transition-all ${selectedWorkflow === wf._id ? 'bg-purple-50 border border-purple-200' : 'hover:bg-slate-50 border border-transparent'}`}>
                                         <input type="radio" name="workflow" value={wf._id}
@@ -172,7 +192,7 @@ const AssignWorkflow = () => {
                                         )}
                                     </label>
                                 ))}
-                                {workflows.length === 0 && (
+                                {eligibleWorkflows.length === 0 && (
                                     <div className="text-center py-8">
                                         <p className="text-slate-400 text-sm">No workflows available</p>
                                         <button type="button" onClick={() => navigate('/workflows/create')}
@@ -228,7 +248,7 @@ const AssignWorkflow = () => {
                 )}
 
                 <div className="flex justify-end gap-3">
-                    <button type="button" onClick={() => navigate('/dashboard')} className="pt-btn-secondary">Cancel</button>
+                    {!embedded && <button type="button" onClick={() => navigate('/dashboard')} className="pt-btn-secondary">Cancel</button>}
                     <button id="assign-submit" type="submit" disabled={submitting || !selectedUser || !selectedWorkflow}
                         className="pt-btn-primary px-8">
                         {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <ClipboardList className="w-4 h-4" />}

@@ -258,7 +258,7 @@ const HeaderSearch: React.FC = () => {
                         {/* Footer Tips */}
                         <div className="px-4 py-2 bg-slate-50/80 border-t border-slate-100 flex justify-between items-center text-[9px] font-extrabold text-slate-400 uppercase tracking-wider">
                             <span>Navigation: Click to jump</span>
-                            <span>Powered by ProcureTrack</span>
+                            <span>Powered by ProcureTask</span>
                         </div>
                     </motion.div>
                 )}

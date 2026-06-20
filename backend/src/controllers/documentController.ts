@@ -8,7 +8,9 @@ export const getAllDocuments = async (req: Request, res: Response) => {
     try {
         // Fetch all assignments that have at least one completed task with a documentUrl
         // Optimization: We could use aggregation, but for MVP fetching all and filtering in memory is fine.
-        const assignments = await Assignment.find()
+        const filter: any = {};
+        if (req.query.userId) filter.user = req.query.userId;
+        const assignments = await Assignment.find(filter)
             .populate('user', 'name email')
             .populate('workflow', 'name');
 
@@ -23,7 +25,8 @@ export const getAllDocuments = async (req: Request, res: Response) => {
                         url: task.documentUrl,
                         uploadedBy: assignment.user?.name || 'Unknown',
                         workflowName: assignment.workflow?.name || 'Unknown',
-                        date: task.completedAt || assignment.updatedAt
+                        date: task.completedAt || assignment.updatedAt,
+                        userId: assignment.user?._id
                     });
                 }
             });

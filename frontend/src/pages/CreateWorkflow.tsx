@@ -8,6 +8,7 @@ const CreateWorkflow = () => {
     const navigate = useNavigate();
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
+    const [audience, setAudience] = useState<'Employee' | 'Vendor'>('Employee');
     const [tasks, setTasks] = useState<{ name: string; type: string; required: boolean }[]>([]);
 
     const addTask = () => {
@@ -29,7 +30,7 @@ const CreateWorkflow = () => {
     const handleSubmit = async (e: React.FormEvent) => { // This will create a new workflow
         e.preventDefault();
         try {
-            await api.post('/workflows', { name, description, tasks });
+            await api.post('/workflows', { name, description, audience, tasks });
             toast.success('Workflow created successfully');
             navigate('/workflows');
         } catch (error: any) {
@@ -52,6 +53,18 @@ const CreateWorkflow = () => {
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                         />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700">Workflow Audience</label>
+                        <select
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border"
+                            value={audience}
+                            onChange={(e) => setAudience(e.target.value as 'Employee' | 'Vendor')}
+                        >
+                            <option value="Employee">Employee workflow</option>
+                            <option value="Vendor">Vendor delivery / procurement workflow</option>
+                        </select>
+                        <p className="text-xs text-gray-500 mt-1">This workflow can only be assigned to accounts in the selected directory.</p>
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700">Description</label>

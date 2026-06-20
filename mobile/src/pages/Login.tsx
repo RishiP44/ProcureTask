@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
@@ -44,11 +44,9 @@ const Login = () => {
             >
                 <ScrollView contentContainerStyle={{ flexGrow: 1, padding: 32, justifyContent: 'center' }}>
                     <View style={styles.brandContainer}>
-                        <View style={styles.logoBox}>
-                            <Text style={styles.logoText}>P</Text>
-                        </View>
-                        <Text style={styles.brand}>ProcureTrack</Text>
-                        <Text style={styles.brandSubtitle}>SYSTEMS v2.4</Text>
+                        <Image source={require('../../assets/icon.png')} style={styles.logoImage} />
+                        <Text style={styles.brand}>ProcureTask</Text>
+                        <Text style={styles.brandSubtitle}>WORK MADE SIMPLE</Text>
                     </View>
 
                     <DataBlock style={{ padding: 24 }}>
@@ -114,20 +112,11 @@ const styles = StyleSheet.create({
         marginBottom: 40,
         alignItems: 'center'
     },
-    logoBox: {
+    logoImage: {
         width: 48,
         height: 48,
-        backgroundColor: '#0f172a',
         borderRadius: 12,
-        alignItems: 'center',
-        justifyContent: 'center',
         marginBottom: 16
-    },
-    logoText: {
-        color: 'white',
-        fontWeight: '900',
-        fontStyle: 'italic',
-        fontSize: 24
     },
     brand: {
         fontSize: 32,

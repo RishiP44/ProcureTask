@@ -1,18 +1,21 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import api from '../services/api';
 import toast from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
+import {
     Workflow, Plus, ChevronRight, Activity, 
     Layers, ShieldCheck, Zap,
     Trash2, Edit3, Search, History
 } from 'lucide-react';
+import AssignWorkflow from './AssignWorkflow';
 
 const Workflows = () => {
     const [workflows, setWorkflows] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
+    const [searchParams, setSearchParams] = useSearchParams();
+    const activeTab = searchParams.get('tab') === 'assign' ? 'assign' : 'templates';
     
     // State for managing version history modal
     const [historyModalOpen, setHistoryModalOpen] = useState(false);
@@ -29,7 +32,7 @@ const Workflows = () => {
             const res = await api.get('/workflows');
             setWorkflows(res.data);
         } catch {
-            toast.error('Registry link failed');
+            toast.error('Could not load workflows');
         } finally {
             setLoading(false);
         }
@@ -42,10 +45,10 @@ const Workflows = () => {
         if (!window.confirm('Archive this workflow template? It will not disrupt existing assignments.')) return;
         try {
             await api.delete(`/workflows/${id}`);
-            toast.success('Workflow Stream Archived');
+            toast.success('Workflow archived');
             fetchWorkflows();
         } catch {
-            toast.error('Archival sequence interrupted');
+            toast.error('Could not archive workflow');
         }
     };
 
@@ -79,19 +82,42 @@ const Workflows = () => {
         );
     }
 
+    if (activeTab === 'assign') {
+        return (
+            <div className="space-y-8 animate-fade-in">
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                    <div>
+                        <h2 className="text-[10px] font-extrabold text-purple-500 uppercase tracking-[0.3em] mb-2">Assign Work</h2>
+                        <h1 className="text-4xl pt-title-gradient pt-outfit">Workflows & Assignments</h1>
+                        <p className="text-slate-400 text-sm mt-3">Choose an audience, person, and matching workflow in one guided flow.</p>
+                    </div>
+                </div>
+                <div className="pt-glass-card p-2 inline-flex gap-2">
+                    <button onClick={() => setSearchParams({})} className="px-5 py-2 rounded-xl text-xs font-black uppercase tracking-wider text-slate-500">Templates</button>
+                    <button className="px-5 py-2 rounded-xl text-xs font-black uppercase tracking-wider bg-slate-900 text-white">Assign workflow</button>
+                </div>
+                <AssignWorkflow embedded />
+            </div>
+        );
+    }
+
     return (
         <div className="space-y-12 animate-fade-in">
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
-                    <h2 className="text-[10px] font-extrabold text-blue-500 uppercase tracking-[0.3em] mb-2">Process Architecture</h2>
-                    <h1 className="text-4xl pt-title-gradient pt-outfit">Active Workflows</h1>
-                    <p className="text-slate-400 text-sm mt-3 font-medium">Managing <span className="text-slate-900 font-bold">{workflows.length}</span> standardized logic sequences.</p>
+                    <h2 className="text-[10px] font-extrabold text-blue-500 uppercase tracking-[0.3em] mb-2">Manage Work</h2>
+                    <h1 className="text-4xl pt-title-gradient pt-outfit">Workflows & Assignments</h1>
+                    <p className="text-slate-400 text-sm mt-3 font-medium">Design role-specific templates, then assign them without leaving this workspace.</p>
                 </div>
                 <Link to="/workflows/create" className="pt-btn-primary h-12 shadow-xl shadow-blue-600/20">
                     <Plus className="w-5 h-5" />
-                    Engineer New Stream
+                    Create Workflow
                 </Link>
+            </div>
+            <div className="pt-glass-card p-2 inline-flex gap-2">
+                <button className="px-5 py-2 rounded-xl text-xs font-black uppercase tracking-wider bg-slate-900 text-white">Templates</button>
+                <button onClick={() => setSearchParams({ tab: 'assign' })} className="px-5 py-2 rounded-xl text-xs font-black uppercase tracking-wider text-slate-500">Assign workflow</button>
             </div>
 
             {/* Filter */}
@@ -100,7 +126,7 @@ const Workflows = () => {
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
                     <input 
                         className="w-full pl-11 pr-4 py-2 bg-transparent border-none text-xs font-bold placeholder:text-slate-300 focus:ring-0"
-                        placeholder="Search process repository by name or definition..."
+                        placeholder="Search workflows by name or description..."
                         value={search}
                         onChange={e => setSearch(e.target.value)}
                     />
@@ -155,6 +181,7 @@ const Workflows = () => {
                                     <div className="flex items-center gap-3">
                                         <h3 className="text-xl font-black text-slate-900 pt-outfit group-hover:text-blue-600 transition-colors">{wf.name}</h3>
                                         <span className="px-2 py-0.5 text-[9px] font-black bg-blue-50 text-blue-600 border border-blue-100 rounded-full">v{wf.version || 1}</span>
+                                        <span className={`px-2 py-0.5 text-[9px] font-black rounded-full ${wf.audience === 'Vendor' ? 'bg-amber-50 text-amber-700 border border-amber-100' : 'bg-emerald-50 text-emerald-700 border border-emerald-100'}`}>{wf.audience || 'Employee'}</span>
                                     </div>
                                     <p className="text-slate-400 text-sm mt-3 font-medium line-clamp-2 min-h-[40px]">{wf.description || 'No system documentation available for this workflow.'}</p>
                                 </div>
@@ -162,14 +189,14 @@ const Workflows = () => {
                                 <div className="mt-10 flex items-center justify-between relative z-10">
                                     <div className="flex items-center gap-6">
                                         <div className="flex flex-col">
-                                            <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-1">Complexity</span>
+                                            <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-1">Tasks</span>
                                             <span className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
                                                 <Zap className="w-3.5 h-3.5 text-amber-500" />
                                                 {wf.tasks?.length || 0} Steps
                                             </span>
                                         </div>
                                         <div className="flex flex-col">
-                                            <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-1">Validation</span>
+                                            <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-1">Status</span>
                                             <span className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
                                                 <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
                                                 Active
@@ -177,7 +204,7 @@ const Workflows = () => {
                                         </div>
                                     </div>
                                     <Link 
-                                        to={`/assign?workflowId=${wf._id}`}
+                                        to={`/workflows?tab=assign&workflowId=${wf._id}`}
                                         className="p-3 bg-slate-900 text-white rounded-xl hover:scale-105 transition-all shadow-lg"
                                     >
                                         <ChevronRight className="w-5 h-5" />
@@ -194,8 +221,8 @@ const Workflows = () => {
                 {filtered.length === 0 && (
                     <div className="col-span-full py-32 text-center pt-glass-card">
                         <Activity className="w-12 h-12 text-slate-200 mx-auto mb-6" />
-                        <h3 className="text-sm font-black text-slate-400 uppercase tracking-[0.2em]">Zero architectural streams identified</h3>
-                        <p className="text-slate-300 text-xs font-medium mt-2">Modify search parameters or execute a new deployment.</p>
+                        <h3 className="text-sm font-black text-slate-400 uppercase tracking-[0.2em]">No Workflows Found</h3>
+                        <p className="text-slate-300 text-xs font-medium mt-2">Try a different search or create a workflow.</p>
                     </div>
                 )}
             </div>
