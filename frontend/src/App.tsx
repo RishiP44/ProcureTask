@@ -18,6 +18,7 @@ import MyTasks from './pages/MyTasks';
 import Profile from './pages/Profile';
 import NotificationsPanel from './pages/NotificationsPanel';
 import Reports from './pages/Reports';
+import AuditLogs from './pages/AuditLogs';
 
 
 import { Toaster } from 'react-hot-toast';
@@ -53,6 +54,7 @@ function AnimatedRoutes() {
                         <Route path="/workflows/:id/edit" element={<EditWorkflow />} />
                         <Route path="/documents" element={<Navigate to="/employees" replace />} />
                         <Route path="/notifications-panel" element={<NotificationsPanel />} />
+                        <Route path="/audit-logs" element={<AuditLogs />} />
 
                         {/* Employee routes */}
                         <Route path="/my-tasks" element={<MyTasks />} />

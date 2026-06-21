@@ -6,7 +6,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
     LayoutDashboard, Users, Workflow, Building2,
     User, LogOut, Menu, Bell,
-    Mail, ClipboardList, ChevronDown, BarChart3
+    Mail, ClipboardList, ChevronDown, BarChart3,
+    Database
 } from 'lucide-react';
 import HeaderSearch from './HeaderSearch';
 import toast from 'react-hot-toast';
@@ -115,6 +116,7 @@ const Layout = () => {
         { name: 'Offer Letters', path: '/offer-letters', icon: <Mail className="w-4 h-4" />, roles: ['Admin', 'HR'] },
         { name: 'Workflows & Assignments', path: '/workflows', icon: <Workflow className="w-4 h-4" />, roles: ['Admin', 'HR'] },
         { name: 'Alerts & Reminders', path: '/notifications-panel', icon: <Bell className="w-4 h-4" />, roles: ['Admin', 'HR'] },
+        { name: 'Audit Logs', path: '/audit-logs', icon: <Database className="w-4 h-4" />, roles: ['Admin', 'HR'] },
         { name: 'My Tasks', path: '/my-tasks', icon: <ClipboardList className="w-4 h-4" />, roles: ['Employee', 'Vendor'] },
         { name: 'Reports', path: '/reports', icon: <BarChart3 className="w-4 h-4" />, roles: ['Admin', 'HR', 'Employee', 'Vendor'] },
         { name: 'My Profile', path: '/profile', icon: <User className="w-4 h-4" />, roles: ['Admin', 'HR', 'Employee', 'Vendor'] },

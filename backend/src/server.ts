@@ -29,6 +29,7 @@ import offerLetterRoutes from './routes/offerLetterRoutes';
 import notificationRoutes from './routes/notificationRoutes';
 import searchRoutes from './routes/searchRoutes';
 import vendorBillRoutes from './routes/vendorBillRoutes';
+import auditLogRoutes from './routes/auditLogRoutes';
 
 app.use('/api/auth', authRoutes);
 app.use('/api/workflows', workflowRoutes);
@@ -40,6 +41,7 @@ app.use('/api/offer-letters', offerLetterRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/search', searchRoutes);
 app.use('/api/vendor-bills', vendorBillRoutes);
+app.use('/api/audit-logs', auditLogRoutes);
 
 // Static uploads
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
