@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs';
 import OfferLetter from '../models/OfferLetter';
 import User from '../models/User';
 import { sendOfferLetterEmail } from '../services/emailService';
+import { AuditLogService } from '../services/auditLogService';
 
 // @desc    Get all offer letters (HR/Admin)
 // @route   GET /api/offer-letters
@@ -61,6 +62,15 @@ export const createOfferLetter = async (req: Request, res: Response) => {
         });
 
         const savedOffer = await newOffer.save();
+
+        await AuditLogService.logAction({
+            actorId: (req as any).user?.id,
+            action: 'offer_letter_created',
+            targetType: 'OfferLetter',
+            targetId: savedOffer._id.toString(),
+            details: `Offer letter created for candidate '${name}' (${email}) for position '${position}' by ${(req as any).user?.name || 'HR/Admin'}.`,
+            metadata: { candidateName: name, candidateEmail: email, position, department, salary }
+        });
 
         // Send actual email using SendGrid (non-blocking)
         sendOfferLetterEmail({
@@ -154,6 +164,15 @@ export const respondToOfferLetter = async (req: Request, res: Response) => {
             offer.status = 'accepted';
             await offer.save();
 
+            await AuditLogService.logAction({
+                actorId: newUser.id,
+                action: 'offer_letter_accepted',
+                targetType: 'OfferLetter',
+                targetId: offer._id.toString(),
+                details: `Offer letter for candidate '${offer.candidate.name}' was accepted, employee account created.`,
+                metadata: { candidateEmail: offer.candidate.email, position: offer.position, department: offer.department }
+            });
+
             return res.json({
                 message: 'Offer accepted and user account created successfully',
                 user: {
@@ -166,6 +185,14 @@ export const respondToOfferLetter = async (req: Request, res: Response) => {
         } else if (action === 'declined') {
             offer.status = 'rejected';
             await offer.save();
+
+            await AuditLogService.logAction({
+                action: 'offer_letter_rejected',
+                targetType: 'OfferLetter',
+                targetId: offer._id.toString(),
+                details: `Offer letter for candidate '${offer.candidate.name}' was declined.`,
+                metadata: { candidateEmail: offer.candidate.email, position: offer.position, department: offer.department }
+            });
 
             return res.json({ message: 'Offer declined successfully' });
         } else {
@@ -188,6 +215,15 @@ export const revokeOfferLetter = async (req: Request, res: Response) => {
         if (!offer) {
             return res.status(404).json({ message: 'Offer letter not found' });
         }
+
+        await AuditLogService.logAction({
+            actorId: (req as any).user?.id,
+            action: 'offer_letter_revoked',
+            targetType: 'OfferLetter',
+            targetId: offer._id.toString(),
+            details: `Offer letter for candidate '${offer.candidate.name}' was revoked by ${(req as any).user?.name || 'HR/Admin'}.`,
+            metadata: { candidateName: offer.candidate.name, candidateEmail: offer.candidate.email }
+        });
 
         await OfferLetter.findByIdAndDelete(id);
         res.json({ message: 'Offer letter revoked and deleted successfully' });

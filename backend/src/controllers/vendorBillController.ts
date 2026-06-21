@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import VendorBill from '../models/VendorBill';
+import { AuditLogService } from '../services/auditLogService';
 
 export const createVendorBill = async (req: Request, res: Response) => {
     try {
@@ -26,6 +27,16 @@ export const createVendorBill = async (req: Request, res: Response) => {
             currency,
             documentUrl
         });
+
+        await AuditLogService.logAction({
+            actorId: (req as any).user.id,
+            action: 'vendor_bill_submitted',
+            targetType: 'VendorBill',
+            targetId: bill._id.toString(),
+            details: `Vendor bill for invoice '${invoiceNumber}' was submitted by ${(req as any).user.companyName || (req as any).user.name}.`,
+            metadata: { invoiceNumber, totalAmount: bill.totalAmount, category }
+        });
+
         res.status(201).json(bill);
     } catch (error: any) {
         if (error?.code === 11000) return res.status(400).json({ message: 'This invoice number has already been submitted' });
@@ -61,6 +72,16 @@ export const updateVendorBillStatus = async (req: Request, res: Response) => {
             reviewedAt: new Date()
         }, { new: true, runValidators: true }).populate('vendor', 'name email companyName vendorType');
         if (!bill) return res.status(404).json({ message: 'Bill not found' });
+
+        await AuditLogService.logAction({
+            actorId: (req as any).user.id,
+            action: 'vendor_bill_status_changed',
+            targetType: 'VendorBill',
+            targetId: bill._id.toString(),
+            details: `Vendor bill for invoice '${bill.invoiceNumber}' status changed to '${req.body.status}' by ${(req as any).user.name}.`,
+            metadata: { invoiceNumber: bill.invoiceNumber, newStatus: req.body.status, auditNotes: req.body.auditNotes }
+        });
+
         res.json(bill);
     } catch (error) {
         res.status(500).json({ message: 'Server Error', error });
