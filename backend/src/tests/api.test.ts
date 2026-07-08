@@ -231,4 +231,37 @@ describe('ProcureTask API Tests', () => {
         });
     });
 
+    describe('9. Dashboard Analytics API', () => {
+        let adminToken: string;
+        let employeeToken: string;
+
+        beforeEach(async () => {
+            const admin = await User.create({ name: 'Admin', email: 'admin@test.com', passwordHash: 'pass', role: 'Admin' });
+            const employee = await User.create({ name: 'Employee', email: 'emp@test.com', passwordHash: 'pass', role: 'Employee' });
+
+            adminToken = jwt.sign({ id: admin._id.toString(), role: admin.role }, process.env.JWT_SECRET || 'secret');
+            employeeToken = jwt.sign({ id: employee._id.toString(), role: employee.role }, process.env.JWT_SECRET || 'secret');
+        });
+
+        it('should allow Admins to retrieve analytics data', async () => {
+            const res = await request(app)
+                .get('/api/analytics')
+                .set('Authorization', `Bearer ${adminToken}`);
+            
+            expect(res.status).toBe(200);
+            expect(res.body).toHaveProperty('kpis');
+            expect(res.body).toHaveProperty('monthsTrend');
+            expect(res.body).toHaveProperty('workflowPerformance');
+            expect(res.body).toHaveProperty('taskBottlenecks');
+        });
+
+        it('should prevent standard Employees from retrieving analytics data', async () => {
+            const res = await request(app)
+                .get('/api/analytics')
+                .set('Authorization', `Bearer ${employeeToken}`);
+            
+            expect(res.status).toBe(403);
+        });
+    });
+
 });
