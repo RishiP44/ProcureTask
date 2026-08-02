@@ -7,7 +7,9 @@
     "test": "jest",
     "dev": "nodemon src/server.ts",
     "build": "tsc",
-    "start": "node dist/server.js"
+    "start": "node dist/server.js",
+    "db": "ts-node src/run-memdb.ts",
+    "seed": "ts-node src/seed.ts"
   },
   "keywords": [],
   "author": "",

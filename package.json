@@ -13,7 +13,10 @@
     "web": "npm run dev --workspace=frontend",
     "android": "cd mobile && npx expo start --android",
     "ios": "cd mobile && npx expo start --ios",
-    "mobile": "cd mobile && npx expo start --port 8099 --clear"
+    "mobile": "cd mobile && npx expo start --port 8099 --clear",
+    "db": "npm run db --prefix backend",
+    "seed": "npm run seed --prefix backend",
+    "backend": "npm run dev --prefix backend"
   },
   "dependencies": {},
   "keywords": [],
