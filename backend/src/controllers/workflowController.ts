@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import Workflow from '../models/Workflow';
 import Assignment from '../models/Assignment';
+import { AuditLogService } from '../services/auditLogService';
 
 // @desc    Create a new workflow
 // @route   POST /api/workflows
@@ -20,6 +21,15 @@ export const createWorkflow = async (req: Request, res: Response) => {
             tasks,
             audience: audience || 'Employee',
             createdBy: (req as any).user.id,
+        });
+
+        await AuditLogService.logAction({
+            actorId: (req as any).user.id,
+            action: 'workflow_created',
+            targetType: 'Workflow',
+            targetId: workflow._id.toString(),
+            details: `Workflow template '${workflow.name}' was created by ${(req as any).user.name || 'HR/Admin'}.`,
+            metadata: { name: workflow.name, audience: workflow.audience, tasksCount: workflow.tasks.length }
         });
 
         res.status(201).json(workflow);
@@ -93,6 +103,21 @@ export const updateWorkflow = async (req: Request, res: Response) => {
             isArchived: false,
         });
 
+        await AuditLogService.logAction({
+            actorId: (req as any).user.id,
+            action: 'workflow_updated',
+            targetType: 'Workflow',
+            targetId: newWorkflow._id.toString(),
+            details: `Workflow template '${newWorkflow.name}' was updated to version v${newWorkflow.version} by ${(req as any).user.name || 'HR/Admin'}.`,
+            metadata: {
+                name: newWorkflow.name,
+                version: newWorkflow.version,
+                previousVersion: currentWorkflow.version,
+                previousId: currentWorkflow._id.toString(),
+                tasksCount: newWorkflow.tasks.length
+            }
+        });
+
         res.json(newWorkflow);
     } catch (error) {
         res.status(500).json({ message: 'Server Error', error });
@@ -112,6 +137,15 @@ export const deleteWorkflow = async (req: Request, res: Response) => {
         // AI Assisted: Soft archival logic - Set isArchived to true instead of deleting
         workflow.isArchived = true;
         await workflow.save();
+
+        await AuditLogService.logAction({
+            actorId: (req as any).user.id,
+            action: 'workflow_archived',
+            targetType: 'Workflow',
+            targetId: workflow._id.toString(),
+            details: `Workflow template '${workflow.name}' was archived by ${(req as any).user.name || 'HR/Admin'}.`,
+            metadata: { name: workflow.name, version: workflow.version }
+        });
 
         res.json({ message: 'Workflow template archived successfully' });
     } catch (error) {

@@ -3,6 +3,7 @@ import Assignment from '../models/Assignment';
 import Workflow from '../models/Workflow';
 import User from '../models/User';
 import { NotificationService } from '../services/notificationService';
+import { AuditLogService } from '../services/auditLogService';
 
 // @desc    Assign workflow to a user
 export const assignWorkflow = async (req: Request, res: Response) => {
@@ -39,6 +40,15 @@ export const assignWorkflow = async (req: Request, res: Response) => {
             status: 'pending',
             assignedBy: (req as any).user.id,
             dueDate: dueDate ? new Date(dueDate) : undefined,
+        });
+
+        await AuditLogService.logAction({
+            actorId: (req as any).user.id,
+            action: 'assignment_created',
+            targetType: 'Assignment',
+            targetId: assignment._id.toString(),
+            details: `Workflow '${workflow.name}' was assigned to ${user.name} by ${(req as any).user.name || 'HR/Admin'}.`,
+            metadata: { workflowId: workflow._id.toString(), userId: user._id.toString(), dueDate: assignment.dueDate }
         });
 
         // Create in-app notification
@@ -139,9 +149,44 @@ export const updateTaskStatus = async (req: Request, res: Response) => {
         if (status === 'completed') task.completedAt = new Date();
 
         const allCompleted = assignment.tasks.every((t: any) => t.status === 'completed');
+        const previousStatus = assignment.status;
         assignment.status = allCompleted ? 'completed' : 'in_progress';
 
         await assignment.save();
+
+        // Audit Logs
+        if (documentUrl) {
+            await AuditLogService.logAction({
+                actorId: (req as any).user.id,
+                action: 'document_uploaded',
+                targetType: 'Assignment',
+                targetId: assignment._id.toString(),
+                details: `Document uploaded for task '${task.name}' in workflow '${(assignment.workflow as any).name}' by ${(req as any).user.name}.`,
+                metadata: { taskId: task._id.toString(), taskName: task.name, documentUrl }
+            });
+        }
+
+        if (status === 'completed') {
+            await AuditLogService.logAction({
+                actorId: (req as any).user.id,
+                action: 'task_completed',
+                targetType: 'Assignment',
+                targetId: assignment._id.toString(),
+                details: `Task '${task.name}' in workflow '${(assignment.workflow as any).name}' completed by ${(req as any).user.name}.`,
+                metadata: { taskId: task._id.toString(), taskName: task.name }
+            });
+        }
+
+        if (allCompleted && previousStatus !== 'completed') {
+            await AuditLogService.logAction({
+                actorId: (req as any).user.id,
+                action: 'workflow_completed',
+                targetType: 'Assignment',
+                targetId: assignment._id.toString(),
+                details: `Onboarding workflow '${(assignment.workflow as any).name}' completed for ${(assignment.user as any).name}.`,
+                metadata: { userId: assignment.user._id.toString(), workflowId: assignment.workflow._id.toString() }
+            });
+        }
 
         // Notify assignedBy if all completed
         if (allCompleted && assignment.assignedBy) {
