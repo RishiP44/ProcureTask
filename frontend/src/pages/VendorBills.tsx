@@ -47,7 +47,7 @@ const VendorBills = () => {
     };
 
     return <div className="space-y-10">
-        <div><h2 className="text-[10px] font-extrabold text-emerald-500 uppercase tracking-[0.3em] mb-2">Accounts Payable</h2><h1 className="text-4xl pt-title-gradient pt-outfit">{isVendor ? 'My Audited Bills' : 'Vendor Bill Review'}</h1><p className="text-slate-400 text-sm mt-3">{isVendor ? 'Submit invoices for products and services delivered to the company.' : 'Audit vendor submissions, review totals, and track payment status.'}</p></div>
+        <div><h1 className="text-4xl pt-title-gradient pt-outfit">{isVendor ? 'My Audited Bills' : 'Vendor Bill Review'}</h1><p className="text-slate-400 text-sm mt-3">{isVendor ? 'Submit invoices for products and services delivered to the company.' : 'Audit vendor submissions, review totals, and track payment status.'}</p></div>
         {!isVendor && <div className="grid md:grid-cols-3 gap-5">
             <div className="pt-glass-card p-6"><p className="pt-label">All submitted value</p><p className="text-3xl font-black mt-2">{money(total)}</p></div>
             <div className="pt-glass-card p-6"><p className="pt-label">Invoices</p><p className="text-3xl font-black mt-2">{bills.length}</p></div>

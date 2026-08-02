@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Alert, ActivityIndicator, Image } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as DocumentPicker from 'expo-document-picker';
-import { DataBlock, WebSectionHeader } from '../components/Theme';
+import { DataBlock } from '../components/Theme';
 import { useAuth } from '../context/AuthContext';
 import { Feather } from '@expo/vector-icons';
 import api from '../services/api';
 
-const Profile = () => {
-    const { user, logout } = useAuth();
+const Profile = ({ onBack }: { onBack?: () => void }) => {
+    const { user, logout, updateUser } = useAuth();
     const [editMode, setEditMode] = useState(false);
     const [name, setName] = useState('');
     const [phone, setPhone] = useState('');
@@ -44,14 +43,7 @@ const Profile = () => {
                 phone,
             });
 
-            // Update user in local storage/context if needed
-            const stored = await AsyncStorage.getItem('user');
-            if (stored) {
-                const parsed = JSON.parse(stored);
-                parsed.name = res.data.name;
-                parsed.phone = res.data.phone;
-                await AsyncStorage.setItem('user', JSON.stringify(parsed));
-            }
+            await updateUser({ name: res.data.name, phone: res.data.phone });
 
             Alert.alert('Success', 'Profile updated successfully.');
             setEditMode(false);
@@ -77,12 +69,7 @@ const Profile = () => {
             const upload = await api.post('/upload', data, { headers: { 'Content-Type': 'multipart/form-data' } });
             const updated = await api.put(`/users/${user?._id}`, { name, phone, avatar: upload.data.filePath });
             setAvatar(updated.data.avatar || '');
-            const stored = await AsyncStorage.getItem('user');
-            if (stored) {
-                const parsed = JSON.parse(stored);
-                parsed.avatar = updated.data.avatar;
-                await AsyncStorage.setItem('user', JSON.stringify(parsed));
-            }
+            await updateUser({ avatar: updated.data.avatar } as any);
             Alert.alert('Photo updated', 'Your profile photo has been saved.');
         } catch (error: any) {
             Alert.alert('Upload failed', error.response?.data?.message || 'Could not upload the photo.');
@@ -93,7 +80,18 @@ const Profile = () => {
 
     return (
         <View style={styles.container}>
-            <WebSectionHeader title="My Profile" />
+            <View style={styles.topBar}>
+                <TouchableOpacity
+                    onPress={() => (onBack ? onBack() : undefined)}
+                    style={styles.backBtn}
+                    activeOpacity={0.7}
+                >
+                    <Feather name="arrow-left" size={18} color="#0f172a" />
+                </TouchableOpacity>
+                <View style={{ flex: 1 }}>
+                    <Text style={styles.pageTitle}>My Profile</Text>
+                </View>
+            </View>
             <ScrollView contentContainerStyle={{ paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
                 <DataBlock style={styles.content}>
                     <TouchableOpacity style={styles.avatar} onPress={choosePhoto} disabled={uploadingPhoto}>
@@ -109,7 +107,9 @@ const Profile = () => {
                             placeholder="Full Name"
                         />
                     ) : (
-                        <Text style={styles.name}>{name}</Text>
+                        <Text style={styles.name}>
+                            {user?.role === 'Vendor' ? (user?.companyName || name) : name}
+                        </Text>
                     )}
                     <Text style={styles.email}>{user?.email}</Text>
                     <Text style={styles.role}>{user?.role}</Text>
@@ -181,7 +181,13 @@ const Profile = () => {
 };
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#f8fafc' },
+    container: { flex: 1, backgroundColor: '#f8fafc', padding: 20 },
+    topBar: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 8, gap: 12 },
+    backBtn: {
+        width: 40, height: 40, borderRadius: 10, backgroundColor: 'white',
+        borderWidth: 1, borderColor: '#e2e8f0', alignItems: 'center', justifyContent: 'center', marginTop: 4
+    },
+    pageTitle: { fontSize: 22, fontWeight: '800', color: '#0f172a', letterSpacing: -0.5 },
     content: { padding: 30, alignItems: 'center' },
     avatar: { width: 80, height: 80, borderRadius: 40, backgroundColor: '#0f172a', alignItems: 'center', justifyContent: 'center', marginBottom: 20 },
     avatarImage: { width: 80, height: 80, borderRadius: 40 },
@@ -190,7 +196,7 @@ const styles = StyleSheet.create({
     name: { fontSize: 24, fontWeight: '800', color: '#0f172a', marginBottom: 4 },
     nameInput: { fontSize: 20, fontWeight: '800', color: '#0f172a', borderBottomWidth: 1, borderBottomColor: '#cbd5e1', width: '80%', textAlign: 'center', marginBottom: 4, paddingVertical: 4 },
     email: { fontSize: 13, fontWeight: '700', color: '#64748b', marginBottom: 6 },
-    role: { fontSize: 10, fontWeight: '900', color: '#3b82f6', textTransform: 'uppercase', letterSpacing: 2, marginBottom: 32 },
+    role: { fontSize: 10, fontWeight: '900', color: '#64748b', textTransform: 'uppercase', letterSpacing: 2, marginBottom: 32 },
     infoBox: { width: '100%', backgroundColor: '#f8fafc', borderRadius: 12, borderWidth: 1, borderColor: '#f1f5f9', padding: 16, marginBottom: 32 },
     infoRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#e2e8f0' },
     infoLabel: { fontSize: 11, fontWeight: '800', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1 },

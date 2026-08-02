@@ -56,30 +56,55 @@ const seed = async () => {
             const salt = await bcrypt.genSalt(10);
             vendorExists.passwordHash = await bcrypt.hash('password123', salt);
             vendorExists.role = 'Vendor';
-            vendorExists.companyName = 'Apex Tech Solutions';
+            vendorExists.name = 'Apex Solutions';
+            vendorExists.companyName = 'Apex Solutions';
             vendorExists.vendorType = 'Software & IT Services';
             vendorExists.taxId = '99-1234567';
-            vendorExists.website = 'https://apextech.example.com';
+            vendorExists.website = 'https://apexsolutions.example.com';
             vendorExists.address = '100 Enterprise Way, Suite 400, Silicon Valley, CA';
             await vendorExists.save();
-            console.log('✅ Vendor password reset to: password123');
+            console.log('✅ Vendor updated: Apex Solutions / vendor@example.com / password123');
         } else {
             const salt = await bcrypt.genSalt(10);
             const passwordHash = await bcrypt.hash('password123', salt);
 
             await User.create({
-                name: 'Jane Smith',
+                name: 'Apex Solutions',
                 email: 'vendor@example.com',
                 passwordHash,
                 role: 'Vendor',
-                companyName: 'Apex Tech Solutions',
+                companyName: 'Apex Solutions',
                 vendorType: 'Software & IT Services',
                 taxId: '99-1234567',
-                website: 'https://apextech.example.com',
+                website: 'https://apexsolutions.example.com',
                 address: '100 Enterprise Way, Suite 400, Silicon Valley, CA',
                 status: 'Active'
             });
-            console.log('✅ Vendor user created: vendor@example.com / password123');
+            console.log('✅ Vendor user created: Apex Solutions / vendor@example.com / password123');
+        }
+
+        // Check if HR exists
+        const hrExists = await User.findOne({ email: 'hr@example.com' });
+        if (hrExists) {
+            console.log('⚠️ HR user already exists. Updating password...');
+            const salt = await bcrypt.genSalt(10);
+            hrExists.passwordHash = await bcrypt.hash('password123', salt);
+            hrExists.role = 'HR';
+            await hrExists.save();
+            console.log('✅ HR password reset to: password123');
+        } else {
+            const salt = await bcrypt.genSalt(10);
+            const passwordHash = await bcrypt.hash('password123', salt);
+            await User.create({
+                name: 'Sarah HR',
+                email: 'hr@example.com',
+                passwordHash,
+                role: 'HR',
+                department: 'People Operations',
+                position: 'HR Manager',
+                status: 'Active'
+            });
+            console.log('✅ HR user created: hr@example.com / password123');
         }
 
         process.exit();

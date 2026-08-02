@@ -15,6 +15,8 @@ const OfferLetters = () => {
     const [newEmail, setNewEmail] = useState('');
     const [newPosition, setNewPosition] = useState('');
     const [newDepartment, setNewDepartment] = useState('');
+    const [newSalary, setNewSalary] = useState('');
+    const [newStartDate, setNewStartDate] = useState('');
     const [submitting, setSubmitting] = useState(false);
 
     const fetchOffers = async () => {
@@ -34,8 +36,8 @@ const OfferLetters = () => {
     }, []);
 
     const handleCreateOffer = async () => {
-        if (!newName || !newEmail || !newPosition || !newDepartment) {
-            Alert.alert('Validation Error', 'All fields are strictly required.');
+        if (!newName || !newEmail || !newPosition || !newDepartment || !newSalary) {
+            Alert.alert('Validation Error', 'Name, email, position, department, and salary are required.');
             return;
         }
 
@@ -45,14 +47,16 @@ const OfferLetters = () => {
                 candidate: { name: newName, email: newEmail },
                 position: newPosition,
                 department: newDepartment,
-                salary: 0,
+                salary: Number(newSalary) || 0,
+                startDate: newStartDate || undefined,
                 status: 'pending'
             });
             setShowModal(false);
             setNewName(''); setNewEmail(''); setNewPosition(''); setNewDepartment('');
+            setNewSalary(''); setNewStartDate('');
             fetchOffers();
-        } catch (e) {
-            Alert.alert('Dispatch Error', 'Failed to dispatch offer letter.');
+        } catch (e: any) {
+            Alert.alert('Dispatch Error', e.response?.data?.message || 'Failed to dispatch offer letter.');
         } finally {
             setSubmitting(false);
         }
@@ -115,9 +119,9 @@ const OfferLetters = () => {
                         <Text style={styles.department} numberOfLines={1}>{item.department}</Text>
                     </View>
                     <View style={{ alignItems: 'flex-end' }}>
-                        <Text style={styles.dateLabel}>DISPATCHED</Text>
+                        <Text style={styles.dateLabel}>SALARY</Text>
                         <Text style={styles.date}>
-                            {new Date(item.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                            ${Number(item.salary || 0).toLocaleString()}
                         </Text>
                     </View>
                 </View>
@@ -136,7 +140,6 @@ const OfferLetters = () => {
                 refreshControl={<RefreshControl refreshing={loading} onRefresh={fetchOffers} tintColor="#2563eb" />}
                 ListHeaderComponent={
                     <View style={{ paddingBottom: 24 }}>
-                        <Text style={styles.subtext}>Acquisition Channel</Text>
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                             <Text style={styles.title}>Proposals</Text>
                             <TouchableOpacity style={styles.addBtn} onPress={() => setShowModal(true)}>
@@ -170,6 +173,8 @@ const OfferLetters = () => {
                             <Text style={[styles.inputLabel, { marginTop: 16 }]}>Role Definition</Text>
                             <TextInput style={styles.input} placeholder="Position Title" value={newPosition} onChangeText={setNewPosition} />
                             <TextInput style={styles.input} placeholder="Department" value={newDepartment} onChangeText={setNewDepartment} />
+                            <TextInput style={styles.input} placeholder="Annual Salary" value={newSalary} onChangeText={setNewSalary} keyboardType="numeric" />
+                            <TextInput style={styles.input} placeholder="Start Date (YYYY-MM-DD)" value={newStartDate} onChangeText={setNewStartDate} />
 
                             <TouchableOpacity style={styles.submitBtn} onPress={handleCreateOffer} disabled={submitting}>
                                 <Text style={styles.submitBtnText}>{submitting ? 'DISPATCHING...' : 'DISPATCH OFFER'}</Text>
@@ -184,7 +189,6 @@ const OfferLetters = () => {
 
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#f8fafc' },
-    subtext: { fontSize: 10, fontWeight: '900', color: '#3b82f6', textTransform: 'uppercase', letterSpacing: 2, marginBottom: 4 },
     title: { fontSize: 26, fontWeight: '800', color: '#0f172a', letterSpacing: -1 },
     addBtn: { width: 40, height: 40, backgroundColor: '#0f172a', borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
     topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 },

@@ -638,7 +638,6 @@ const Reports = () => {
             {/* Header Block */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
                 <div>
-                    <h2 className="text-[10px] font-extrabold text-blue-500 uppercase tracking-[0.35em] mb-2">Reports Hub</h2>
                     <h1 className="text-4xl pt-title-gradient pt-outfit">Logistical Analytics</h1>
                     <p className="text-slate-400 text-sm mt-2 font-medium">
                         Analyze and export reports for onboarding checklists, organizational compliance status, and vendor activity.
