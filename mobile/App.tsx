@@ -6,6 +6,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import Login from './src/pages/Login';
 import Dashboard from './src/pages/Dashboard';
 import Employees from './src/pages/Employees';
+import Vendors from './src/pages/Vendors';
 import Workflows from './src/pages/Workflows';
 import Documents from './src/pages/Documents';
 import AssignTask from './src/pages/AssignTask';
@@ -14,6 +15,9 @@ import Profile from './src/pages/Profile';
 import EmployeeProfile from './src/pages/EmployeeProfile';
 import AssignmentDetail from './src/pages/AssignmentDetail';
 import VendorBills from './src/pages/VendorBills';
+import MyTasks from './src/pages/MyTasks';
+import Reports from './src/pages/Reports';
+import Alerts from './src/pages/Alerts';
 import { useAuth } from './src/context/AuthContext';
 
 const AppContent = () => {
@@ -21,7 +25,9 @@ const AppContent = () => {
   const [currentScreen, setCurrentScreen] = useState('Dashboard');
   const [selectedEmployee, setSelectedEmployee] = useState('');
   const [selectedAssignment, setSelectedAssignment] = useState('');
-  
+  const [profileBackScreen, setProfileBackScreen] = useState('Employees');
+  const [assignmentBackScreen, setAssignmentBackScreen] = useState('Dashboard');
+
   if (loading) {
     return (
       <View style={{ flex: 1, backgroundColor: '#0f172a', justifyContent: 'center', alignItems: 'center' }}>
@@ -31,30 +37,70 @@ const AppContent = () => {
     );
   }
   if (!isAuthenticated) return <Login />;
-  
+
+  const openEmployee = (id: string, backTo = 'Employees') => {
+    setSelectedEmployee(id);
+    setProfileBackScreen(backTo);
+    setCurrentScreen('EmployeeProfile');
+  };
+
+  const openAssignment = (id: string, backTo = currentScreen === 'EmployeeProfile' ? 'EmployeeProfile' : currentScreen) => {
+    setSelectedAssignment(id);
+    setAssignmentBackScreen(backTo === 'AssignmentDetail' ? 'Dashboard' : backTo);
+    setCurrentScreen('AssignmentDetail');
+  };
+
   return (
-    <Layout 
-      currentScreen={currentScreen} 
+    <Layout
+      currentScreen={currentScreen}
       setScreen={setCurrentScreen}
-      onSelectEmployee={(id) => { setSelectedEmployee(id); setCurrentScreen('EmployeeProfile'); }}
-      onSelectAssignment={(id) => { setSelectedAssignment(id); setCurrentScreen('AssignmentDetail'); }}
+      onSelectEmployee={(id) => openEmployee(id, 'Employees')}
+      onSelectAssignment={(id) => openAssignment(id, 'Dashboard')}
     >
       {currentScreen === 'Dashboard' && (
-          <Dashboard onSelectAssignment={(id) => { setSelectedAssignment(id); setCurrentScreen('AssignmentDetail'); }} setScreen={setCurrentScreen} />
+        <Dashboard
+          onSelectAssignment={(id) => openAssignment(id, 'Dashboard')}
+          setScreen={setCurrentScreen}
+        />
       )}
-      {currentScreen === 'Employees' && <Employees setScreen={setCurrentScreen} onSelectEmployee={setSelectedEmployee} />}
+      {currentScreen === 'MyTasks' && (
+        <MyTasks onSelectAssignment={(id) => openAssignment(id, 'MyTasks')} />
+      )}
+      {currentScreen === 'Employees' && (
+        <Employees
+          setScreen={setCurrentScreen}
+          onSelectEmployee={(id) => openEmployee(id, 'Employees')}
+        />
+      )}
+      {currentScreen === 'Vendors' && (
+        <Vendors
+          setScreen={setCurrentScreen}
+          onSelectEmployee={(id) => openEmployee(id, 'Vendors')}
+        />
+      )}
       {currentScreen === 'EmployeeProfile' && (
-          <EmployeeProfile employeeId={selectedEmployee} onBack={() => setCurrentScreen('Employees')} onSelectAssignment={(id) => { setSelectedAssignment(id); setCurrentScreen('AssignmentDetail'); }} />
+        <EmployeeProfile
+          employeeId={selectedEmployee}
+          onBack={() => setCurrentScreen(profileBackScreen)}
+          onSelectAssignment={(id) => openAssignment(id, 'EmployeeProfile')}
+        />
       )}
       {currentScreen === 'AssignmentDetail' && (
-          <AssignmentDetail assignmentId={selectedAssignment} onBack={() => setCurrentScreen('Dashboard')} />
+        <AssignmentDetail
+          assignmentId={selectedAssignment}
+          onBack={() => setCurrentScreen(assignmentBackScreen)}
+        />
       )}
       {currentScreen === 'AssignTask' && <AssignTask />}
       {currentScreen === 'OfferLetters' && <OfferLetters />}
-      {currentScreen === 'Profile' && <Profile />}
+      {currentScreen === 'Profile' && <Profile onBack={() => setCurrentScreen('Dashboard')} />}
       {currentScreen === 'Workflows' && <Workflows />}
       {currentScreen === 'Documents' && <Documents />}
       {currentScreen === 'VendorBills' && <VendorBills />}
+      {currentScreen === 'Reports' && (
+        <Reports onSelectAssignment={(id) => openAssignment(id, 'Reports')} />
+      )}
+      {currentScreen === 'Alerts' && <Alerts />}
     </Layout>
   );
 };

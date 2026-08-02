@@ -116,6 +116,39 @@ const Dashboard = () => {
             {/* Header section */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
+                    <h1 className="text-4xl pt-title-gradient pt-outfit">Dashboard</h1>
+                    <p className="text-slate-400 text-sm mt-3 font-medium">Work and progress for <span className="text-slate-900 font-bold">{user?.role === 'Vendor' ? (user?.companyName || user?.name) : user?.name}</span></p>
+                </div>
+                {isHR && (
+                    <div className="flex items-center gap-3 flex-wrap">
+                        <Link to="/employees" className="pt-btn-primary">
+                            Employees
+                        </Link>
+                        <Link to="/vendors" className="pt-btn-secondary">
+                            Vendors
+                        </Link>
+                        <Link to="/workflows?tab=assign" className="pt-btn-accent">
+                            <SendHorizontal className="w-3.5 h-3.5" />
+                            Assign Workflow
+                        </Link>
+                    </div>
+                )}
+                {user?.role === 'Employee' && (
+                    <Link to="/my-tasks" className="pt-btn-primary">
+                        My Tasks
+                    </Link>
+                )}
+                {isVendor && (
+                    <div className="flex items-center gap-3">
+                        <Link to="/my-tasks" className="pt-btn-secondary">
+                            My Tasks
+                        </Link>
+                        <Link to="/vendor-bills" className="pt-btn-primary">
+                            <ReceiptText className="w-4 h-4" />
+                            Submit Audited Bill
+                        </Link>
+                    </div>
+                )}
                     <h2 className="text-[10px] font-extrabold text-blue-500 uppercase tracking-[0.3em] mb-2">Systems Overview</h2>
                     <h1 className="text-4xl pt-title-gradient pt-outfit">Dashboard</h1>
                     <p className="text-slate-400 text-sm mt-3 font-medium">

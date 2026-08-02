@@ -85,7 +85,6 @@ const EmployeeProfile = () => {
                     <ArrowLeft className="w-5 h-5 text-slate-600" />
                 </button>
                 <div>
-                    <h2 className="text-[10px] font-extrabold text-blue-500 uppercase tracking-[0.3em] mb-2">{employee.role === 'Vendor' ? 'Vendor Network' : 'Employee Directory'}</h2>
                     <h1 className="text-4xl pt-title-gradient pt-outfit">{employee.role === 'Vendor' ? 'Vendor Record' : 'Employee Record'}</h1>
                 </div>
             </div>

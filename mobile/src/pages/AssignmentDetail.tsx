@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { Feather } from '@expo/vector-icons';
 import * as DocumentPicker from 'expo-document-picker';
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Alert, StatusBar, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Alert, StatusBar, StyleSheet, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
-import { DataBlock } from '../components/Theme';
+import { DataBlock, WebBadge } from '../components/Theme';
+
+const getBaseUrl = () => String(api.defaults.baseURL || '').replace(/\/api\/?$/, '');
 
 interface AssignmentDetailProps {
     assignmentId: string;
@@ -12,9 +15,14 @@ interface AssignmentDetailProps {
 }
 
 const AssignmentDetail = ({ assignmentId, onBack }: AssignmentDetailProps) => {
+    const { user } = useAuth();
     const [assignment, setAssignment] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [updating, setUpdating] = useState<string | null>(null);
+
+    const isAdminOrHR = user?.role === 'Admin' || user?.role === 'HR';
+    const isAssignee = assignment?.user?._id === user?._id || assignment?.user === user?._id;
+    const canComplete = !isAdminOrHR || isAssignee;
 
     const fetchDetail = async () => {
         try {
@@ -22,7 +30,7 @@ const AssignmentDetail = ({ assignmentId, onBack }: AssignmentDetailProps) => {
             const res = await api.get(`/assignments/${assignmentId}`);
             setAssignment(res.data);
         } catch (error) {
-            Alert.alert('System Error', 'Failed to synchronize with deployment server.');
+            Alert.alert('Error', 'Failed to load assignment details.');
         } finally {
             setLoading(false);
         }
@@ -32,14 +40,24 @@ const AssignmentDetail = ({ assignmentId, onBack }: AssignmentDetailProps) => {
         fetchDetail();
     }, [assignmentId]);
 
+    const openDoc = (path?: string) => {
+        if (!path) return;
+        const url = path.startsWith('http') ? path : `${getBaseUrl()}${path}`;
+        Linking.openURL(url).catch(() => Alert.alert('Error', 'Could not open document.'));
+    };
+
     const handleTaskComplete = async (task: any) => {
+        if (!canComplete) {
+            Alert.alert('View only', 'Only the assigned person can complete tasks.');
+            return;
+        }
         if (task.type === 'document') {
             try {
                 const result = await DocumentPicker.getDocumentAsync({});
                 if (!result.canceled && result.assets && result.assets.length > 0) {
                     const asset = result.assets[0];
                     setUpdating(task._id);
-                    
+
                     const formData = new FormData();
                     formData.append('file', {
                         uri: asset.uri,
@@ -51,26 +69,27 @@ const AssignmentDetail = ({ assignmentId, onBack }: AssignmentDetailProps) => {
                         const uploadRes = await api.post('/upload', formData, {
                             headers: { 'Content-Type': 'multipart/form-data' }
                         });
-                        
-                        // Send PUT request to complete task with documentUrl
+
                         await api.put(`/assignments/${assignmentId}/tasks/${task._id}`, {
                             status: 'completed',
                             documentUrl: uploadRes.data.filePath || uploadRes.data.url
                         });
-                        
+
                         setAssignment((prev: any) => {
-                            const newTasks = prev.tasks.map((t: any) => 
-                                t._id === task._id ? { ...t, status: 'completed', documentUrl: uploadRes.data.filePath } : t
+                            const newTasks = prev.tasks.map((t: any) =>
+                                t._id === task._id
+                                    ? { ...t, status: 'completed', documentUrl: uploadRes.data.filePath || uploadRes.data.url }
+                                    : t
                             );
                             return { ...prev, tasks: newTasks };
                         });
-                    } catch (uploadError) {
+                    } catch {
                         Alert.alert('Upload Error', 'Failed to upload document to server.');
                     } finally {
                         setUpdating(null);
                     }
                 }
-            } catch (err) {
+            } catch {
                 Alert.alert('Picker Error', 'Error selecting file.');
             }
         } else {
@@ -84,15 +103,15 @@ const AssignmentDetail = ({ assignmentId, onBack }: AssignmentDetailProps) => {
             await api.put(`/assignments/${assignmentId}/tasks/${taskId}`, {
                 status: 'completed'
             });
-            
+
             setAssignment((prev: any) => {
-                const newTasks = prev.tasks.map((t: any) => 
+                const newTasks = prev.tasks.map((t: any) =>
                     t._id === taskId ? { ...t, status: 'completed' } : t
                 );
                 return { ...prev, tasks: newTasks };
             });
-        } catch (error) {
-            Alert.alert('Authorization Error', 'Verification of task completion failed.');
+        } catch {
+            Alert.alert('Error', 'Task completion failed.');
         } finally {
             setUpdating(null);
         }
@@ -110,91 +129,116 @@ const AssignmentDetail = ({ assignmentId, onBack }: AssignmentDetailProps) => {
         return (
             <View style={[styles.container, { alignItems: 'center', justifyContent: 'center', padding: 32 }]}>
                 <Feather name="alert-triangle" size={48} color="#94a3b8" style={{ marginBottom: 16 }} />
-                <Text style={styles.errorTitle}>Signal Lost</Text>
-                <Text style={styles.errorDesc}>The requested deployment record could not be located in the central database.</Text>
+                <Text style={styles.errorTitle}>Not Found</Text>
+                <Text style={styles.errorDesc}>The requested assignment could not be located.</Text>
                 <TouchableOpacity onPress={onBack} style={styles.backBtnLarge}>
-                    <Text style={styles.backBtnText}>Return to Dashboard</Text>
+                    <Text style={styles.backBtnText}>Go Back</Text>
                 </TouchableOpacity>
             </View>
         );
     }
 
     const completedTasks = assignment.tasks.filter((t: any) => t.status === 'completed').length;
-    const progress = (completedTasks / assignment.tasks.length) * 100;
+    const progress = assignment.tasks.length > 0 ? (completedTasks / assignment.tasks.length) * 100 : 0;
+    const isOverdue = assignment.dueDate && assignment.status !== 'completed' && new Date(assignment.dueDate) < new Date();
 
     return (
-        <SafeAreaView style={styles.container}>
+        <SafeAreaView style={styles.container} edges={['bottom']}>
             <StatusBar barStyle="dark-content" />
             <View style={styles.header}>
                 <TouchableOpacity onPress={onBack} style={styles.backBtn}>
                     <Feather name="arrow-left" size={18} color="#1e293b" />
                 </TouchableOpacity>
-                <View>
-                    <Text style={styles.headerSub}>Protocol View</Text>
-                    <Text style={styles.headerTitle}>Assignment Detail</Text>
+                <View style={{ flex: 1 }}>
+                    <Text style={styles.headerSub}>Assignment</Text>
+                    <Text style={styles.headerTitle}>Task Detail</Text>
                 </View>
+                <WebBadge status={isOverdue ? 'overdue' : assignment.status} />
             </View>
 
             <ScrollView contentContainerStyle={{ padding: 24, paddingBottom: 100 }} showsVerticalScrollIndicator={false}>
-                <View style={{ marginBottom: 32 }}>
-                    <Text style={styles.workflowName}>{assignment.workflow.name}</Text>
-                    <Text style={styles.workflowDesc}>{assignment.workflow.description}</Text>
+                <View style={{ marginBottom: 24 }}>
+                    <Text style={styles.workflowName}>{assignment.workflow?.name}</Text>
+                    <Text style={styles.workflowDesc}>{assignment.workflow?.description}</Text>
+                    {assignment.user?.name && (
+                        <Text style={styles.assignee}>Assignee: {assignment.user.name}</Text>
+                    )}
+                    {assignment.dueDate && (
+                        <Text style={[styles.assignee, isOverdue && { color: '#ef4444' }]}>
+                            Due: {new Date(assignment.dueDate).toLocaleDateString()}
+                            {isOverdue ? ' (OVERDUE)' : ''}
+                        </Text>
+                    )}
                 </View>
+
+                {!canComplete && (
+                    <DataBlock style={{ backgroundColor: '#fffbeb', borderColor: '#fef3c7', marginBottom: 16 }}>
+                        <Text style={{ fontSize: 12, fontWeight: '700', color: '#d97706' }}>
+                            View-only mode — assignees complete their own tasks.
+                        </Text>
+                    </DataBlock>
+                )}
 
                 <DataBlock style={{ borderLeftWidth: 4, borderLeftColor: '#3b82f6', marginBottom: 32 }}>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                        <Text style={styles.syncLabel}>Synchronization</Text>
+                        <Text style={styles.syncLabel}>Progress</Text>
                         <Text style={styles.syncValue}>{Math.round(progress)}%</Text>
                     </View>
                     <View style={styles.barBg}>
                         <View style={[styles.barFill, { width: `${progress}%` }]} />
                     </View>
                     <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 12 }}>
-                        <Feather name="cpu" size={12} color="#94a3b8" style={{ marginRight: 6 }} />
+                        <Feather name="check-circle" size={12} color="#94a3b8" style={{ marginRight: 6 }} />
                         <Text style={styles.segmentsText}>
-                            {completedTasks} / {assignment.tasks.length} Segments Finalized
+                            {completedTasks} / {assignment.tasks.length} Tasks Completed
                         </Text>
                     </View>
                 </DataBlock>
 
-                <Text style={styles.checklistTitle}>Execution Checklist</Text>
-                
+                <Text style={styles.checklistTitle}>Task Checklist</Text>
+
                 {assignment.tasks.map((task: any, idx: number) => {
                     const isCompleted = task.status === 'completed';
                     const isUpdating = updating === task._id;
 
                     return (
-                        <TouchableOpacity 
-                            key={task._id} 
-                            activeOpacity={0.8}
-                            onPress={() => !isCompleted && handleTaskComplete(task)}
-                            disabled={isCompleted || isUpdating}
-                            style={{ marginBottom: 16 }}
-                        >
-                            <DataBlock style={[styles.taskCard, isCompleted && { opacity: 0.6, backgroundColor: '#f8fafc' }]}>
-                                <View style={[styles.taskIconBox, isCompleted ? { backgroundColor: '#ecfdf5', borderColor: '#ecfdf5' } : undefined]}>
-                                    {isCompleted ? (
-                                        <Feather name="check" size={16} color="#10b981" />
-                                    ) : (
-                                        <Text style={styles.taskIdx}>{idx + 1}</Text>
-                                    )}
-                                </View>
-                                <View style={{ flex: 1, marginRight: 16 }}>
-                                    <Text style={[styles.taskName, isCompleted && { color: '#94a3b8', textDecorationLine: 'line-through' }]}>
-                                        {task.name}
-                                    </Text>
-                                    <Text style={styles.taskType}>
-                                        {task.type === 'document' ? 'File Verification' : 'Binary State Check'}
-                                    </Text>
-                                </View>
+                        <View key={task._id} style={{ marginBottom: 16 }}>
+                            <TouchableOpacity
+                                activeOpacity={0.8}
+                                onPress={() => !isCompleted && canComplete && handleTaskComplete(task)}
+                                disabled={isCompleted || isUpdating || !canComplete}
+                            >
+                                <DataBlock style={[styles.taskCard, isCompleted && { opacity: 0.75, backgroundColor: '#f8fafc' }]}>
+                                    <View style={[styles.taskIconBox, isCompleted ? { backgroundColor: '#ecfdf5', borderColor: '#ecfdf5' } : undefined]}>
+                                        {isCompleted ? (
+                                            <Feather name="check" size={16} color="#10b981" />
+                                        ) : (
+                                            <Text style={styles.taskIdx}>{idx + 1}</Text>
+                                        )}
+                                    </View>
+                                    <View style={{ flex: 1, marginRight: 16 }}>
+                                        <Text style={[styles.taskName, isCompleted && { color: '#94a3b8', textDecorationLine: 'line-through' }]}>
+                                            {task.name}
+                                        </Text>
+                                        <Text style={styles.taskType}>
+                                            {task.type === 'document' ? 'Document Upload' : 'Checkbox Task'}
+                                        </Text>
+                                    </View>
 
-                                {isUpdating ? (
-                                    <ActivityIndicator size="small" color="#3b82f6" />
-                                ) : !isCompleted && (
-                                    <Feather name="chevron-right" size={16} color="#cbd5e1" />
-                                )}
-                            </DataBlock>
-                        </TouchableOpacity>
+                                    {isUpdating ? (
+                                        <ActivityIndicator size="small" color="#3b82f6" />
+                                    ) : !isCompleted && canComplete ? (
+                                        <Feather name="chevron-right" size={16} color="#cbd5e1" />
+                                    ) : null}
+                                </DataBlock>
+                            </TouchableOpacity>
+                            {isCompleted && task.documentUrl && (
+                                <TouchableOpacity onPress={() => openDoc(task.documentUrl)} style={styles.docLink}>
+                                    <Feather name="external-link" size={14} color="#2563eb" />
+                                    <Text style={styles.docLinkText}>View uploaded document</Text>
+                                </TouchableOpacity>
+                            )}
+                        </View>
                     );
                 })}
             </ScrollView>
@@ -214,6 +258,7 @@ const styles = StyleSheet.create({
     headerTitle: { fontSize: 18, fontWeight: '800', color: '#0f172a' },
     workflowName: { fontSize: 28, fontWeight: '800', color: '#0f172a', letterSpacing: -1, marginBottom: 8 },
     workflowDesc: { fontSize: 13, color: '#64748b', lineHeight: 20 },
+    assignee: { fontSize: 12, fontWeight: '700', color: '#64748b', marginTop: 8 },
     syncLabel: { fontSize: 10, fontWeight: '900', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1.5 },
     syncValue: { fontSize: 14, fontWeight: '900', color: '#3b82f6' },
     barBg: { height: 8, backgroundColor: '#f1f5f9', borderRadius: 4, overflow: 'hidden' },
@@ -224,7 +269,9 @@ const styles = StyleSheet.create({
     taskIconBox: { width: 40, height: 40, borderRadius: 12, backgroundColor: 'white', borderWidth: 1, borderColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center', marginRight: 16 },
     taskIdx: { fontSize: 12, fontWeight: '900', color: '#64748b' },
     taskName: { fontSize: 14, fontWeight: '800', color: '#0f172a' },
-    taskType: { fontSize: 10, fontWeight: '800', color: '#94a3b8', textTransform: 'uppercase', marginTop: 4 }
+    taskType: { fontSize: 10, fontWeight: '800', color: '#94a3b8', textTransform: 'uppercase', marginTop: 4 },
+    docLink: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8, marginLeft: 8 },
+    docLinkText: { fontSize: 12, fontWeight: '700', color: '#2563eb' },
 });
 
 export default AssignmentDetail;

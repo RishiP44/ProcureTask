@@ -151,14 +151,28 @@ const EditWorkflow = () => {
                     
                     <div className="space-y-2">
                         <label className="block text-xs font-extrabold text-slate-400 uppercase tracking-widest">Workflow Audience</label>
-                        <select
-                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium"
-                            value={audience}
-                            onChange={(e) => setAudience(e.target.value as 'Employee' | 'Vendor')}
-                        >
-                            <option value="Employee">Employee workflow</option>
-                            <option value="Vendor">Vendor delivery / procurement workflow</option>
-                        </select>
+                        <div className="grid grid-cols-2 gap-3">
+                            {([
+                                { value: 'Employee' as const, label: 'Employee', hint: 'Internal staff onboarding' },
+                                { value: 'Vendor' as const, label: 'Vendor', hint: 'Supplier / procurement' },
+                            ]).map(opt => (
+                                <button
+                                    key={opt.value}
+                                    type="button"
+                                    onClick={() => setAudience(opt.value)}
+                                    className={`text-left p-4 rounded-xl border-2 transition-all ${
+                                        audience === opt.value
+                                            ? opt.value === 'Vendor'
+                                                ? 'border-amber-500 bg-amber-50'
+                                                : 'border-emerald-500 bg-emerald-50'
+                                            : 'border-slate-200 bg-white hover:border-slate-300'
+                                    }`}
+                                >
+                                    <div className="text-sm font-black text-slate-900">{opt.label}</div>
+                                    <div className="text-xs text-slate-500 mt-1">{opt.hint}</div>
+                                </button>
+                            ))}
+                        </div>
                     </div>
 
                     <div className="space-y-2">

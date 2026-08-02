@@ -4,6 +4,12 @@ export interface User {
     email: string;
     role: string;
     token: string;
+    companyName?: string;
+    vendorType?: string;
+    department?: string;
+    position?: string;
+    phone?: string;
+    avatar?: string;
 }
 
 export interface Workflow {

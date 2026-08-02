@@ -37,7 +37,6 @@ const Vendors = () => {
     return <div className="space-y-10">
         <div className="flex items-end justify-between gap-6">
             <div>
-                <h2 className="text-[10px] font-extrabold text-amber-500 uppercase tracking-[0.3em] mb-2">Supply Network</h2>
                 <h1 className="text-4xl pt-title-gradient pt-outfit">Vendor Directory</h1>
                 <p className="text-slate-400 text-sm mt-3">External product and service providers are managed independently from employees.</p>
             </div>

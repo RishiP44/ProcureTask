@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
-
 import toast from 'react-hot-toast';
 
 const CreateWorkflow = () => {
@@ -9,13 +8,20 @@ const CreateWorkflow = () => {
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
     const [audience, setAudience] = useState<'Employee' | 'Vendor'>('Employee');
-    const [tasks, setTasks] = useState<{ name: string; type: string; required: boolean }[]>([]);
+    const [tasks, setTasks] = useState<{ name: string; type: string; required: boolean }[]>([
+        { name: '', type: 'checkbox', required: true },
+    ]);
+    const [saving, setSaving] = useState(false);
 
     const addTask = () => {
         setTasks([...tasks, { name: '', type: 'checkbox', required: true }]);
     };
 
     const removeTask = (index: number) => {
+        if (tasks.length <= 1) {
+            toast.error('A workflow needs at least one task');
+            return;
+        }
         const newTasks = [...tasks];
         newTasks.splice(index, 1);
         setTasks(newTasks);
@@ -27,21 +33,44 @@ const CreateWorkflow = () => {
         setTasks(newTasks);
     };
 
-    const handleSubmit = async (e: React.FormEvent) => { // This will create a new workflow
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        const validTasks = tasks.filter(t => t.name.trim() !== '');
+        if (!name.trim()) {
+            toast.error('Workflow name is required');
+            return;
+        }
+        if (validTasks.length === 0) {
+            toast.error('Add at least one task with a name before saving');
+            return;
+        }
+
+        setSaving(true);
         try {
-            await api.post('/workflows', { name, description, audience, tasks });
-            toast.success('Workflow created successfully');
-            navigate('/workflows');
+            const res = await api.post('/workflows', {
+                name: name.trim(),
+                description,
+                audience,
+                tasks: validTasks,
+            });
+            toast.success(`${audience} workflow created successfully`);
+            // Jump straight into assign with the right audience + template selected
+            navigate(`/workflows?tab=assign&workflowId=${res.data._id}&audience=${audience}`);
         } catch (error: any) {
             const msg = error.response?.data?.message || 'Failed to create workflow';
             toast.error(msg);
+        } finally {
+            setSaving(false);
         }
     };
 
     return (
         <div className="max-w-3xl mx-auto">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Create New Workflow</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Create New Workflow</h2>
+            <p className="text-sm text-slate-500 mb-6">
+                Choose Employee or Vendor audience — this controls who the template can be assigned to.
+            </p>
             <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 space-y-4">
                     <div>
@@ -52,19 +81,36 @@ const CreateWorkflow = () => {
                             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
+                            placeholder={audience === 'Vendor' ? 'e.g. Vendor Onboarding Pack' : 'e.g. New Hire Onboarding'}
                         />
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700">Workflow Audience</label>
-                        <select
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border"
-                            value={audience}
-                            onChange={(e) => setAudience(e.target.value as 'Employee' | 'Vendor')}
-                        >
-                            <option value="Employee">Employee workflow</option>
-                            <option value="Vendor">Vendor delivery / procurement workflow</option>
-                        </select>
-                        <p className="text-xs text-gray-500 mt-1">This workflow can only be assigned to accounts in the selected directory.</p>
+                        <div className="mt-2 grid grid-cols-2 gap-3">
+                            {([
+                                { value: 'Employee' as const, label: 'Employee', hint: 'Internal staff & HR onboarding' },
+                                { value: 'Vendor' as const, label: 'Vendor', hint: 'Supplier delivery / procurement' },
+                            ]).map(opt => (
+                                <button
+                                    key={opt.value}
+                                    type="button"
+                                    onClick={() => setAudience(opt.value)}
+                                    className={`text-left p-4 rounded-xl border-2 transition-all ${
+                                        audience === opt.value
+                                            ? opt.value === 'Vendor'
+                                                ? 'border-amber-500 bg-amber-50'
+                                                : 'border-emerald-500 bg-emerald-50'
+                                            : 'border-slate-200 bg-white hover:border-slate-300'
+                                    }`}
+                                >
+                                    <div className="text-sm font-black text-slate-900">{opt.label}</div>
+                                    <div className="text-xs text-slate-500 mt-1">{opt.hint}</div>
+                                </button>
+                            ))}
+                        </div>
+                        <p className="text-xs text-gray-500 mt-2">
+                            This workflow can only be assigned to accounts in the selected directory.
+                        </p>
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700">Description</label>
@@ -73,6 +119,7 @@ const CreateWorkflow = () => {
                             rows={3}
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
+                            placeholder="Describe what this process covers..."
                         />
                     </div>
                 </div>
@@ -130,9 +177,6 @@ const CreateWorkflow = () => {
                                 </button>
                             </div>
                         ))}
-                        {tasks.length === 0 && (
-                            <p className="text-sm text-gray-500 text-center py-4">No tasks added yet.</p>
-                        )}
                     </div>
                 </div>
 
@@ -146,9 +190,10 @@ const CreateWorkflow = () => {
                     </button>
                     <button
                         type="submit"
-                        className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700"
+                        disabled={saving}
+                        className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 disabled:opacity-60"
                     >
-                        Save Workflow
+                        {saving ? 'Saving…' : `Save ${audience} Workflow`}
                     </button>
                 </div>
             </form>

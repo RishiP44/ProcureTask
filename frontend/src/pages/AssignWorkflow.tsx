@@ -12,12 +12,15 @@ const AssignWorkflow = ({ embedded = false }: { embedded?: boolean }) => {
     const [searchParams] = useSearchParams();
     const preselectedUser = searchParams.get('userId') || '';
     const preselectedWorkflow = searchParams.get('workflowId') || '';
+    const preselectedAudience = searchParams.get('audience') as 'Employee' | 'Vendor' | null;
 
     const [users, setUsers] = useState<any[]>([]);
     const [workflows, setWorkflows] = useState<any[]>([]);
     const [selectedUser, setSelectedUser] = useState(preselectedUser);
     const [selectedWorkflow, setSelectedWorkflow] = useState(preselectedWorkflow);
-    const [targetRole, setTargetRole] = useState<'Employee' | 'Vendor'>('Employee');
+    const [targetRole, setTargetRole] = useState<'Employee' | 'Vendor'>(
+        preselectedAudience === 'Vendor' ? 'Vendor' : 'Employee'
+    );
     const [userSearch, setUserSearch] = useState('');
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
@@ -31,16 +34,32 @@ const AssignWorkflow = ({ embedded = false }: { embedded?: boolean }) => {
                     api.get('/users'),
                     api.get('/workflows'),
                 ]);
-                setUsers(usersRes.data.filter((item: any) => ['Employee', 'Vendor'].includes(item.role)));
+                const allUsers = usersRes.data.filter((item: any) => ['Employee', 'Vendor'].includes(item.role));
+                setUsers(allUsers);
                 setWorkflows(workflowsRes.data);
-                const initialUser = usersRes.data.find((item: any) => item._id === preselectedUser);
+                const initialUser = allUsers.find((item: any) => item._id === preselectedUser);
                 const initialWorkflow = workflowsRes.data.find((item: any) => item._id === preselectedWorkflow);
-                if (initialUser?.role === 'Vendor' || initialWorkflow?.audience === 'Vendor') setTargetRole('Vendor');
+                if (
+                    preselectedAudience === 'Vendor' ||
+                    initialUser?.role === 'Vendor' ||
+                    initialWorkflow?.audience === 'Vendor'
+                ) {
+                    setTargetRole('Vendor');
+                } else if (
+                    preselectedAudience === 'Employee' ||
+                    initialUser?.role === 'Employee' ||
+                    initialWorkflow?.audience === 'Employee'
+                ) {
+                    setTargetRole('Employee');
+                }
+                if (preselectedWorkflow && initialWorkflow) {
+                    setSelectedWorkflow(initialWorkflow._id);
+                }
             } catch { toast.error('Failed to load data'); }
             finally { setLoading(false); }
         };
         fetchData();
-    }, []);
+    }, [preselectedUser, preselectedWorkflow, preselectedAudience]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -87,7 +106,7 @@ const AssignWorkflow = ({ embedded = false }: { embedded?: boolean }) => {
             </div>
             <h2 className="text-2xl font-bold text-slate-900 mb-2">Task Assigned!</h2>
             <p className="text-slate-500 mb-2">
-                <strong>{selectedUserData?.name}</strong> has been assigned
+                <strong>{selectedUserData?.role === 'Vendor' ? (selectedUserData?.companyName || selectedUserData?.name) : selectedUserData?.name}</strong> has been assigned
             </p>
             <p className="text-slate-500 mb-8">
                 <strong>"{selectedWorkflowData?.name}"</strong>
@@ -97,8 +116,11 @@ const AssignWorkflow = ({ embedded = false }: { embedded?: boolean }) => {
                 <button onClick={() => { setDone(false); setSelectedUser(''); setSelectedWorkflow(''); }} className="pt-btn-secondary">
                     Assign Another
                 </button>
-                <button onClick={() => navigate('/employees')} className="pt-btn-primary">
-                    View Employees <ArrowRight className="w-4 h-4" />
+                <button
+                    onClick={() => navigate(targetRole === 'Vendor' ? '/vendors' : '/employees')}
+                    className="pt-btn-primary"
+                >
+                    View {targetRole === 'Vendor' ? 'Vendors' : 'Employees'} <ArrowRight className="w-4 h-4" />
                 </button>
             </div>
         </div>
@@ -133,7 +155,7 @@ const AssignWorkflow = ({ embedded = false }: { embedded?: boolean }) => {
                         <div className="p-4">
                             <div className="relative mb-3">
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                                <input className="pt-input pl-9 text-sm" placeholder="Search employees…"
+                                <input className="pt-input pl-9 text-sm" placeholder={`Search ${targetRole.toLowerCase()}s…`}
                                     value={userSearch} onChange={e => setUserSearch(e.target.value)} />
                             </div>
                             <div className="space-y-1 max-h-72 overflow-y-auto">
@@ -158,7 +180,16 @@ const AssignWorkflow = ({ embedded = false }: { embedded?: boolean }) => {
                                     </label>
                                 ))}
                                 {filteredUsers.length === 0 && (
-                                    <p className="text-center text-slate-400 text-sm py-4">No employees found</p>
+                                    <div className="text-center py-6 space-y-2">
+                                        <p className="text-slate-400 text-sm">No {targetRole.toLowerCase()}s found</p>
+                                        <button
+                                            type="button"
+                                            onClick={() => navigate(targetRole === 'Vendor' ? '/vendors' : '/employees')}
+                                            className="pt-btn-primary pt-btn-sm"
+                                        >
+                                            Invite {targetRole}
+                                        </button>
+                                    </div>
                                 )}
                             </div>
                         </div>
@@ -194,9 +225,12 @@ const AssignWorkflow = ({ embedded = false }: { embedded?: boolean }) => {
                                 ))}
                                 {eligibleWorkflows.length === 0 && (
                                     <div className="text-center py-8">
-                                        <p className="text-slate-400 text-sm">No workflows available</p>
+                                        <p className="text-slate-400 text-sm">No {targetRole.toLowerCase()} workflows available</p>
+                                        <p className="text-xs text-slate-400 mt-1 mb-3">
+                                            Create a template with audience set to {targetRole}, or switch the tab above.
+                                        </p>
                                         <button type="button" onClick={() => navigate('/workflows/create')}
-                                            className="pt-btn-primary pt-btn-sm mt-3">Create Workflow</button>
+                                            className="pt-btn-primary pt-btn-sm mt-1">Create {targetRole} Workflow</button>
                                     </div>
                                 )}
                             </div>
@@ -227,9 +261,13 @@ const AssignWorkflow = ({ embedded = false }: { embedded?: boolean }) => {
                         <h3 className="font-semibold text-slate-900 mb-3 text-sm">Assignment Summary</h3>
                         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                             <div className="flex items-center gap-2.5">
-                                <div className="pt-avatar-md text-sm">{getInitials(selectedUserData?.name || '')}</div>
+                                <div className="pt-avatar-md text-sm">{getInitials(selectedUserData?.companyName || selectedUserData?.name || '')}</div>
                                 <div>
-                                    <div className="font-semibold text-slate-900 text-sm">{selectedUserData?.name}</div>
+                                    <div className="font-semibold text-slate-900 text-sm">
+                                        {selectedUserData?.role === 'Vendor'
+                                            ? (selectedUserData?.companyName || selectedUserData?.name)
+                                            : selectedUserData?.name}
+                                    </div>
                                     <div className="text-xs text-slate-400">{selectedUserData?.email}</div>
                                 </div>
                             </div>

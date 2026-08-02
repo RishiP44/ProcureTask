@@ -56,8 +56,8 @@ You need to create the initial Admin and Employee users. Run this command in the
 ```bash
 npx ts-node src/seed.ts
 ```
-*   **Result**: This will create an Admin user (`admin@example.com`) and an Employee user (`employee@example.com`).
-*   **Already seeded?** Re-running the script is safe — it will reset the Admin password to `password123` and skip creating duplicate users.
+*   **Result**: This will create Admin, HR, Employee, and Vendor demo users (all password `password123`).
+*   **Already seeded?** Re-running the script is safe — it will reset passwords and skip creating duplicates.
 
 ---
 

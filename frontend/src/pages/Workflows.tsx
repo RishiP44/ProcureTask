@@ -16,6 +16,7 @@ const Workflows = () => {
     const [search, setSearch] = useState('');
     const [searchParams, setSearchParams] = useSearchParams();
     const activeTab = searchParams.get('tab') === 'assign' ? 'assign' : 'templates';
+    const [audienceFilter, setAudienceFilter] = useState<'all' | 'Employee' | 'Vendor'>('all');
     
     // State for managing version history modal
     const [historyModalOpen, setHistoryModalOpen] = useState(false);
@@ -66,10 +67,13 @@ const Workflows = () => {
         }
     };
 
-    const filtered = workflows.filter(wf => 
-        wf.name?.toLowerCase().includes(search.toLowerCase()) ||
-        wf.description?.toLowerCase().includes(search.toLowerCase())
-    );
+    const filtered = workflows.filter(wf => {
+        const matchesSearch =
+            wf.name?.toLowerCase().includes(search.toLowerCase()) ||
+            wf.description?.toLowerCase().includes(search.toLowerCase());
+        const matchesAudience = audienceFilter === 'all' || (wf.audience || 'Employee') === audienceFilter;
+        return matchesSearch && matchesAudience;
+    });
 
     if (loading) {
         return (
@@ -87,7 +91,6 @@ const Workflows = () => {
             <div className="space-y-8 animate-fade-in">
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                     <div>
-                        <h2 className="text-[10px] font-extrabold text-purple-500 uppercase tracking-[0.3em] mb-2">Assign Work</h2>
                         <h1 className="text-4xl pt-title-gradient pt-outfit">Workflows & Assignments</h1>
                         <p className="text-slate-400 text-sm mt-3">Choose an audience, person, and matching workflow in one guided flow.</p>
                     </div>
@@ -106,7 +109,6 @@ const Workflows = () => {
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
-                    <h2 className="text-[10px] font-extrabold text-blue-500 uppercase tracking-[0.3em] mb-2">Manage Work</h2>
                     <h1 className="text-4xl pt-title-gradient pt-outfit">Workflows & Assignments</h1>
                     <p className="text-slate-400 text-sm mt-3 font-medium">Design role-specific templates, then assign them without leaving this workspace.</p>
                 </div>
@@ -121,7 +123,7 @@ const Workflows = () => {
             </div>
 
             {/* Filter */}
-            <div className="pt-glass-card p-4 flex items-center gap-4">
+            <div className="pt-glass-card p-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
                 <div className="relative flex-1 group">
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
                     <input 
@@ -130,6 +132,20 @@ const Workflows = () => {
                         value={search}
                         onChange={e => setSearch(e.target.value)}
                     />
+                </div>
+                <div className="flex gap-2">
+                    {(['all', 'Employee', 'Vendor'] as const).map(f => (
+                        <button
+                            key={f}
+                            type="button"
+                            onClick={() => setAudienceFilter(f)}
+                            className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider ${
+                                audienceFilter === f ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-500'
+                            }`}
+                        >
+                            {f === 'all' ? 'All' : f}
+                        </button>
+                    ))}
                 </div>
             </div>
 
@@ -204,8 +220,9 @@ const Workflows = () => {
                                         </div>
                                     </div>
                                     <Link 
-                                        to={`/workflows?tab=assign&workflowId=${wf._id}`}
+                                        to={`/workflows?tab=assign&workflowId=${wf._id}&audience=${wf.audience || 'Employee'}`}
                                         className="p-3 bg-slate-900 text-white rounded-xl hover:scale-105 transition-all shadow-lg"
+                                        title={`Assign this ${wf.audience || 'Employee'} workflow`}
                                     >
                                         <ChevronRight className="w-5 h-5" />
                                     </Link>
