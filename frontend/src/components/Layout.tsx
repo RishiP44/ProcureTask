@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
     LayoutDashboard, Users, Workflow, Building2,
     User, LogOut, Menu, Bell,
-    Mail, ClipboardList, ChevronDown, BarChart3
+    Mail, ClipboardList, ChevronDown, BarChart3, ReceiptText
 } from 'lucide-react';
 import HeaderSearch from './HeaderSearch';
 import toast from 'react-hot-toast';
@@ -112,6 +112,7 @@ const Layout = () => {
         { name: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard className="w-4 h-4" />, roles: ['Admin', 'HR', 'Employee', 'Vendor'] },
         { name: 'Employees', path: '/employees', icon: <Users className="w-4 h-4" />, roles: ['Admin', 'HR'] },
         { name: 'Vendors', path: '/vendors', icon: <Building2 className="w-4 h-4" />, roles: ['Admin', 'HR'] },
+        { name: 'Vendor Bills', path: '/vendor-bills', icon: <ReceiptText className="w-4 h-4" />, roles: ['Admin', 'HR', 'Vendor'] },
         { name: 'Offer Letters', path: '/offer-letters', icon: <Mail className="w-4 h-4" />, roles: ['Admin', 'HR'] },
         { name: 'Workflows & Assignments', path: '/workflows', icon: <Workflow className="w-4 h-4" />, roles: ['Admin', 'HR'] },
         { name: 'Alerts & Reminders', path: '/notifications-panel', icon: <Bell className="w-4 h-4" />, roles: ['Admin', 'HR'] },
@@ -296,10 +297,12 @@ const Layout = () => {
                                 className="flex items-center gap-3 pl-4 border-l border-slate-100 group"
                             >
                                 <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-xs font-bold ring-2 ring-white shadow-md">
-                                    {user?.name?.charAt(0) || 'U'}
+                                    {(user?.role === 'Vendor' ? ((user as any).companyName || user?.name) : user?.name)?.charAt(0) || 'U'}
                                 </div>
                                 <div className="hidden lg:flex flex-col items-start">
-                                    <span className="text-[11px] font-extrabold text-slate-900 uppercase tracking-widest">{user?.name}</span>
+                                    <span className="text-[11px] font-extrabold text-slate-900 uppercase tracking-widest">
+                                        {user?.role === 'Vendor' ? ((user as any).companyName || user?.name) : user?.name}
+                                    </span>
                                     <span className="text-[9px] font-bold text-blue-500 uppercase tracking-tighter">{user?.role}</span>
                                 </div>
                                 <ChevronDown className="w-3 h-3 text-slate-300 group-hover:text-slate-900 transition-colors" />

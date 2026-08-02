@@ -13,9 +13,11 @@ export const WebBadge = ({ status }: { status: string }) => {
     const s = (status || 'pending').toLowerCase();
     let theme = { bg: '#f8fafc', text: '#64748b', border: '#e2e8f0' };
     
-    if (s.includes('active') || s.includes('completed') || s.includes('approved')) 
+    if (s.includes('active') || s.includes('completed') || s.includes('approved') || s.includes('paid')) 
         theme = { bg: '#f0fdf4', text: '#16a34a', border: '#bbf7d0' };
-    else if (s.includes('pending') || s.includes('review') || s.includes('progress')) 
+    else if (s.includes('overdue') || s.includes('rejected')) 
+        theme = { bg: '#fef2f2', text: '#dc2626', border: '#fecaca' };
+    else if (s.includes('pending') || s.includes('review') || s.includes('progress') || s.includes('submitted') || s.includes('invited')) 
         theme = { bg: '#fffbeb', text: '#d97706', border: '#fef3c7' };
 
     return (

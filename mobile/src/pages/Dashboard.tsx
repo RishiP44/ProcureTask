@@ -9,7 +9,7 @@ import { DataBlock, WebBadge, WebSectionHeader } from '../components/Theme';
 const Dashboard = ({ onSelectAssignment, setScreen }: { onSelectAssignment: (id: string) => void, setScreen: (s: string) => void }) => {
     const { user } = useAuth();
     const [assignments, setAssignments] = useState<any[]>([]);
-    const [stats, setStats] = useState({ total: 0, completed: 0, pending: 0, totalStaff: 0 });
+    const [stats, setStats] = useState({ total: 0, completed: 0, pending: 0, inProgress: 0, totalStaff: 0 });
     const [loading, setLoading] = useState(true);
 
     const loadData = async () => {
@@ -24,11 +24,16 @@ const Dashboard = ({ onSelectAssignment, setScreen }: { onSelectAssignment: (id:
 
             setAssignments(Array.isArray(assigRes.data) ? assigRes.data : []);
             
+            const list = Array.isArray(assigRes.data) ? assigRes.data : [];
             const staffData = Array.isArray(usersRes.data) ? usersRes.data.filter((u:any) => u.role !== 'Admin') : [];
+            const completed = list.filter((a: any) => a.status === 'completed').length;
+            const pending = list.filter((a: any) => a.status === 'pending').length;
+            const inProgress = list.filter((a: any) => a.status === 'in_progress').length;
             setStats({
-                total: assigRes.data.length || 0,
-                completed: assigRes.data.filter((a: any) => a.status === 'completed').length,
-                pending: assigRes.data.filter((a: any) => a.status !== 'completed').length,
+                total: list.length,
+                completed,
+                pending,
+                inProgress,
                 totalStaff: staffData.length || 0
             });
         } catch (error: any) {
@@ -60,14 +65,13 @@ const Dashboard = ({ onSelectAssignment, setScreen }: { onSelectAssignment: (id:
         
         // Calculate chart widths
         const pPending = total > 0 ? (stats.pending / total) * 100 : 0;
-        const pActive = total > 0 ? ((stats.total - stats.completed - stats.pending) / total) * 100 : 0;
+        const pActive = total > 0 ? (stats.inProgress / total) * 100 : 0;
         const pCompleted = total > 0 ? (stats.completed / total) * 100 : 0;
 
         return (
             <View style={styles.header}>
-                <Text style={styles.systemsSub}>OVERVIEW</Text>
                 <Text style={styles.welcome}>Dashboard</Text>
-                <Text style={styles.date}>Work and progress for <Text style={{ fontWeight: '800', color: '#0f172a' }}>{user?.name}</Text></Text>
+                <Text style={styles.date}>Work and progress for <Text style={{ fontWeight: '800', color: '#0f172a' }}>{user?.role === 'Vendor' ? (user?.companyName || user?.name) : user?.name}</Text></Text>
                 
                 {/* Admin Quick Actions */}
                 {isHR && (
@@ -75,9 +79,31 @@ const Dashboard = ({ onSelectAssignment, setScreen }: { onSelectAssignment: (id:
                         <TouchableOpacity style={styles.primaryBtn} onPress={() => setScreen('Employees')}>
                             <Text style={styles.primaryBtnText}>Employees</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity style={[styles.primaryBtn, { backgroundColor: '#3b82f6' }]} onPress={() => setScreen('AssignTask')}>
+                        <TouchableOpacity style={[styles.primaryBtn, { backgroundColor: '#3b82f6' }]} onPress={() => setScreen('Workflows')}>
                             <Feather name="send" size={14} color="white" style={{ marginRight: 6 }} />
                             <Text style={styles.primaryBtnText}>Assign Workflow</Text>
+                        </TouchableOpacity>
+                    </View>
+                )}
+                {user?.role === 'Vendor' && (
+                    <View style={styles.adminActions}>
+                        <TouchableOpacity style={[styles.primaryBtn, { backgroundColor: '#059669' }]} onPress={() => setScreen('VendorBills')}>
+                            <Feather name="file-text" size={14} color="white" style={{ marginRight: 6 }} />
+                            <Text style={styles.primaryBtnText}>Submit Bill</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.primaryBtn} onPress={() => setScreen('MyTasks')}>
+                            <Text style={styles.primaryBtnText}>My Tasks</Text>
+                        </TouchableOpacity>
+                    </View>
+                )}
+                {user?.role === 'Employee' && (
+                    <View style={styles.adminActions}>
+                        <TouchableOpacity style={[styles.primaryBtn, { backgroundColor: '#3b82f6' }]} onPress={() => setScreen('MyTasks')}>
+                            <Feather name="check-square" size={14} color="white" style={{ marginRight: 6 }} />
+                            <Text style={styles.primaryBtnText}>My Tasks</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.primaryBtn} onPress={() => setScreen('Reports')}>
+                            <Text style={styles.primaryBtnText}>Reports</Text>
                         </TouchableOpacity>
                     </View>
                 )}
@@ -99,7 +125,7 @@ const Dashboard = ({ onSelectAssignment, setScreen }: { onSelectAssignment: (id:
                     <DataBlock style={[styles.statBox, { borderLeftColor: '#3b82f6', borderLeftWidth: 4, width: '48%' }]}>
                         <View style={[styles.iconWrap, { backgroundColor: '#eff6ff' }]}><Feather name="activity" size={16} color="#2563eb" /></View>
                         <Text style={styles.statLabel}>Active</Text>
-                        <Text style={styles.statValue}>{stats.total - stats.completed - stats.pending}</Text>
+                        <Text style={styles.statValue}>{stats.inProgress}</Text>
                         <Text style={[styles.statHint, { color: '#3b82f6' }]}>In Progress</Text>
                     </DataBlock>
                     <DataBlock style={[styles.statBox, { borderLeftColor: '#10b981', borderLeftWidth: 4, width: '48%' }]}>
@@ -161,10 +187,16 @@ const Dashboard = ({ onSelectAssignment, setScreen }: { onSelectAssignment: (id:
                                     { (user?.role === 'Admin' || user?.role === 'HR') ? (
                                         <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 12 }}>
                                             <View style={{ width: 28, height: 28, backgroundColor: '#f1f5f9', borderRadius: 14, alignItems: 'center', justifyContent: 'center', marginRight: 10 }}>
-                                                <Text style={{ fontSize: 11, fontWeight: '800', color: '#64748b' }}>{(item.user?.name || 'U').charAt(0)}</Text>
+                                                <Text style={{ fontSize: 11, fontWeight: '800', color: '#64748b' }}>
+                                                    {((item.user?.role === 'Vendor' ? item.user?.companyName : item.user?.name) || 'U').charAt(0)}
+                                                </Text>
                                             </View>
                                             <View>
-                                                <Text style={{ fontSize: 12, fontWeight: '800', color: '#0f172a', textTransform: 'uppercase' }}>{item.user?.name || 'Unknown'}</Text>
+                                                <Text style={{ fontSize: 12, fontWeight: '800', color: '#0f172a', textTransform: 'uppercase' }}>
+                                                    {item.user?.role === 'Vendor'
+                                                        ? (item.user?.companyName || item.user?.name || 'Unknown')
+                                                        : (item.user?.name || 'Unknown')}
+                                                </Text>
                                                 <Text style={{ fontSize: 9, fontWeight: '700', color: '#94a3b8', textTransform: 'uppercase' }}>{item.user?.role || 'EMPLOYEE'}</Text>
                                             </View>
                                         </View>
@@ -206,13 +238,6 @@ const styles = StyleSheet.create({
     },
     header: {
         padding: 20
-    },
-    systemsSub: {
-        fontSize: 10,
-        fontWeight: '900',
-        color: '#3b82f6',
-        letterSpacing: 2,
-        marginBottom: 4
     },
     welcome: {
         fontSize: 26,

@@ -1,13 +1,15 @@
 import { ChangeEvent, useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import toast from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Edit2, Check, Loader2, Camera, Shield, 
-    UserRound, Activity
+    UserRound, Activity, ArrowLeft
 } from 'lucide-react';
 
 const Profile = () => {
+    const navigate = useNavigate();
     const [profile, setProfile] = useState<any>(null);
     const [editMode, setEditMode] = useState(false);
     const [editData, setEditData] = useState<any>({});
@@ -89,6 +91,17 @@ const Profile = () => {
 
     return (
         <div className="animate-fade-in max-w-4xl mx-auto pb-20">
+            <div className="mb-6">
+                <button
+                    type="button"
+                    onClick={() => navigate('/dashboard')}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-700 text-xs font-black uppercase tracking-widest hover:bg-slate-50 hover:text-slate-900 transition-all shadow-sm"
+                >
+                    <ArrowLeft className="w-4 h-4" />
+                    Back to Dashboard
+                </button>
+            </div>
+
             {/* Header & Coverage */}
             <div className="relative mb-32">
                 <div className="h-48 w-full bg-gradient-to-r from-slate-900 via-blue-900 to-indigo-950 rounded-[40px] shadow-2xl overflow-hidden">
@@ -115,7 +128,6 @@ const Profile = () => {
                     </div>
 
                     <div className="pb-4">
-                        <h2 className="text-[10px] font-black text-blue-500 uppercase tracking-[0.4em] mb-2 drop-shadow-sm">My Profile</h2>
                         <h1 className="text-4xl font-black text-slate-900 pt-outfit">
                             {profile.role === 'Vendor' && profile.companyName ? profile.companyName : profile.name}
                         </h1>

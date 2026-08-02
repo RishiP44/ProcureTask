@@ -127,7 +127,9 @@ Use these credentials to log in:
 | Role | Email | Password |
 |:---|:---|:---|
 | **Admin** | `admin@example.com` | `password123` |
+| **HR** | `hr@example.com` | `password123` |
 | **Employee** | `employee@example.com` | `password123` |
+| **Vendor** | `vendor@example.com` | `password123` |
 
 ---
 

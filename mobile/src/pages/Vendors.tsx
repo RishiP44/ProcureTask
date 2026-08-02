@@ -2,29 +2,27 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, TextInput, StyleSheet, ActivityIndicator, TouchableOpacity, Modal, Alert, ScrollView } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import api from '../services/api';
-import { DataBlock, WebBadge, WebSectionHeader, IndustrialButton } from '../components/Theme';
+import { DataBlock, WebSectionHeader, IndustrialButton } from '../components/Theme';
 
-const emptyInvite = { name: '', email: '', role: 'Employee', position: '', department: '' };
+const emptyForm = {
+    name: '', email: '', companyName: '', vendorType: '', taxId: '', website: '', address: '', role: 'Vendor'
+};
 
-const Employees = ({ setScreen, onSelectEmployee }: { setScreen: (s: string) => void; onSelectEmployee: (id: string) => void }) => {
-    const [employees, setEmployees] = useState<any[]>([]);
+const Vendors = ({ setScreen, onSelectEmployee }: { setScreen: (s: string) => void; onSelectEmployee: (id: string) => void }) => {
+    const [vendors, setVendors] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
     const [showInvite, setShowInvite] = useState(false);
-    const [inviting, setInviting] = useState(false);
-    const [inviteForm, setInviteForm] = useState(emptyInvite);
+    const [saving, setSaving] = useState(false);
+    const [form, setForm] = useState(emptyForm);
 
     const load = async () => {
         try {
-            const [empRes, hrRes] = await Promise.all([
-                api.get('/users', { params: { role: 'Employee' } }),
-                api.get('/users', { params: { role: 'HR' } }).catch(() => ({ data: [] })),
-            ]);
-            const combined = [...(Array.isArray(empRes.data) ? empRes.data : []), ...(Array.isArray(hrRes.data) ? hrRes.data : [])];
-            const unique = Array.from(new Map(combined.map(u => [u._id, u])).values());
-            setEmployees(unique);
+            const res = await api.get('/users', { params: { role: 'Vendor' } });
+            setVendors(Array.isArray(res.data) ? res.data : []);
         } catch (e) {
             console.error(e);
+            Alert.alert('Error', 'Failed to load vendors.');
         } finally {
             setLoading(false);
         }
@@ -32,39 +30,36 @@ const Employees = ({ setScreen, onSelectEmployee }: { setScreen: (s: string) => 
 
     useEffect(() => { load(); }, []);
 
-    const handleInvite = async () => {
-        if (!inviteForm.name || !inviteForm.email) {
-            return Alert.alert('Missing fields', 'Name and email are required.');
+    const submitInvite = async () => {
+        if (!form.name || !form.email || !form.companyName || !form.vendorType || !form.taxId || !form.address) {
+            return Alert.alert('Missing fields', 'Please fill all required vendor fields.');
         }
-        setInviting(true);
+        setSaving(true);
         try {
-            await api.post('/auth/invite', inviteForm);
-            Alert.alert('Invite sent', `Invitation emailed to ${inviteForm.email}`);
+            await api.post('/auth/invite', form);
+            Alert.alert('Invite sent', `Invitation emailed to ${form.email}`);
             setShowInvite(false);
-            setInviteForm(emptyInvite);
+            setForm(emptyForm);
             await load();
         } catch (err: any) {
-            Alert.alert('Invite failed', err.response?.data?.message || 'Could not invite employee.');
+            Alert.alert('Invite failed', err.response?.data?.message || 'Could not invite vendor.');
         } finally {
-            setInviting(false);
+            setSaving(false);
         }
     };
 
-    const filtered = employees.filter(e =>
-        [e.name, e.email, e.position, e.department, e.companyName]
-            .join(' ')
-            .toLowerCase()
-            .includes(search.toLowerCase())
+    const filtered = vendors.filter(v =>
+        [v.companyName, v.name, v.email, v.vendorType].join(' ').toLowerCase().includes(search.toLowerCase())
     );
 
     return (
         <View style={styles.container}>
             <View style={styles.headerRow}>
                 <View style={{ flex: 1 }}>
-                    <Text style={styles.title}>Employees</Text>
+                    <Text style={styles.title}>Vendors</Text>
                 </View>
                 <TouchableOpacity style={styles.addBtn} onPress={() => setShowInvite(true)}>
-                    <Feather name="user-plus" size={18} color="white" />
+                    <Feather name="plus" size={18} color="white" />
                 </TouchableOpacity>
             </View>
 
@@ -72,14 +67,14 @@ const Employees = ({ setScreen, onSelectEmployee }: { setScreen: (s: string) => 
                 <Feather name="search" size={16} color="#94a3b8" />
                 <TextInput
                     style={styles.searchInput}
-                    placeholder="Search directory..."
+                    placeholder="Search company, contact, category..."
                     value={search}
                     onChangeText={setSearch}
                     placeholderTextColor="#94a3b8"
                 />
             </View>
 
-            <WebSectionHeader title="Corporate Directory" count={filtered.length} />
+            <WebSectionHeader title="Vendor Directory" count={filtered.length} />
 
             {loading ? (
                 <ActivityIndicator color="#2563eb" size="large" style={{ marginTop: 40 }} />
@@ -98,27 +93,22 @@ const Employees = ({ setScreen, onSelectEmployee }: { setScreen: (s: string) => 
                             <DataBlock>
                                 <View style={styles.row}>
                                     <View style={styles.avatar}>
-                                        <Text style={styles.avatarText}>{(item.name || 'U').charAt(0)}</Text>
+                                        <Feather name="briefcase" size={18} color="#d97706" />
                                     </View>
                                     <View style={{ flex: 1 }}>
-                                        <Text style={styles.name}>{item.name}</Text>
-                                        <Text style={styles.role}>
-                                            {(item.role || 'Employee').toUpperCase()}
-                                            {item.position ? ` · ${item.position}` : ''}
-                                        </Text>
-                                        <Text style={styles.email}>{item.email}</Text>
+                                        <Text style={styles.name}>{item.companyName || item.name}</Text>
+                                        <Text style={styles.meta}>{item.vendorType || 'Vendor partner'}</Text>
+                                        <Text style={styles.contact}>Contact: {item.name} · {item.email}</Text>
                                     </View>
-                                    <View style={{ alignItems: 'flex-end', gap: 6 }}>
-                                        <WebBadge status={item.status || 'Active'} />
-                                        <Feather name="chevron-right" size={16} color="#cbd5e1" />
-                                    </View>
+                                    <Feather name="chevron-right" size={16} color="#cbd5e1" />
                                 </View>
                             </DataBlock>
                         </TouchableOpacity>
                     )}
                     ListEmptyComponent={
                         <DataBlock style={{ alignItems: 'center', padding: 40 }}>
-                            <Text style={styles.empty}>No employees found</Text>
+                            <Feather name="briefcase" size={28} color="#cbd5e1" />
+                            <Text style={styles.empty}>No vendors yet</Text>
                         </DataBlock>
                     }
                     contentContainerStyle={{ paddingBottom: 40 }}
@@ -129,29 +119,20 @@ const Employees = ({ setScreen, onSelectEmployee }: { setScreen: (s: string) => 
                 <View style={styles.modalOverlay}>
                     <View style={styles.modalContent}>
                         <View style={styles.modalHeader}>
-                            <Text style={styles.modalTitle}>Invite Employee</Text>
+                            <Text style={styles.modalTitle}>Invite Vendor</Text>
                             <TouchableOpacity onPress={() => setShowInvite(false)} style={styles.closeBtn}>
                                 <Feather name="x" size={20} color="#64748b" />
                             </TouchableOpacity>
                         </View>
                         <ScrollView contentContainerStyle={{ padding: 24 }} keyboardShouldPersistTaps="handled">
-                            <Text style={styles.inputLabel}>Role</Text>
-                            <View style={styles.roleRow}>
-                                {['Employee', 'HR'].map(r => (
-                                    <TouchableOpacity
-                                        key={r}
-                                        style={[styles.roleChip, inviteForm.role === r && styles.roleChipActive]}
-                                        onPress={() => setInviteForm({ ...inviteForm, role: r })}
-                                    >
-                                        <Text style={[styles.roleChipText, inviteForm.role === r && styles.roleChipTextActive]}>{r}</Text>
-                                    </TouchableOpacity>
-                                ))}
-                            </View>
                             {[
-                                ['Full name', 'name'],
-                                ['Email', 'email'],
-                                ['Position', 'position'],
-                                ['Department', 'department'],
+                                ['Company name', 'companyName'],
+                                ['Vendor category', 'vendorType'],
+                                ['Contact name', 'name'],
+                                ['Contact email', 'email'],
+                                ['Tax ID / business number', 'taxId'],
+                                ['Website', 'website'],
+                                ['Business address', 'address'],
                             ].map(([label, key]) => (
                                 <View key={key} style={{ marginBottom: 12 }}>
                                     <Text style={styles.inputLabel}>{label}</Text>
@@ -159,14 +140,14 @@ const Employees = ({ setScreen, onSelectEmployee }: { setScreen: (s: string) => 
                                         style={styles.input}
                                         placeholder={label}
                                         placeholderTextColor="#94a3b8"
-                                        value={(inviteForm as any)[key]}
-                                        onChangeText={v => setInviteForm({ ...inviteForm, [key]: v })}
+                                        value={(form as any)[key]}
+                                        onChangeText={v => setForm({ ...form, [key]: v })}
                                         keyboardType={key === 'email' ? 'email-address' : 'default'}
-                                        autoCapitalize={key === 'email' ? 'none' : 'words'}
+                                        autoCapitalize={key === 'email' || key === 'website' ? 'none' : 'sentences'}
                                     />
                                 </View>
                             ))}
-                            <IndustrialButton label={inviting ? 'SENDING…' : 'SEND INVITE'} onPress={handleInvite} loading={inviting} />
+                            <IndustrialButton label={saving ? 'SENDING…' : 'SEND VENDOR INVITE'} onPress={submitInvite} loading={saving} />
                         </ScrollView>
                     </View>
                 </View>
@@ -187,14 +168,13 @@ const styles = StyleSheet.create({
     searchInput: { flex: 1, marginLeft: 10, fontSize: 14, color: '#0f172a' },
     row: { flexDirection: 'row', alignItems: 'center' },
     avatar: {
-        width: 40, height: 40, backgroundColor: '#f1f5f9', borderRadius: 20,
+        width: 44, height: 44, backgroundColor: '#fffbeb', borderRadius: 12,
         alignItems: 'center', justifyContent: 'center', marginRight: 14
     },
-    avatarText: { fontWeight: '700', color: '#64748b' },
-    name: { fontSize: 15, fontWeight: '700', color: '#0f172a' },
-    role: { fontSize: 11, color: '#64748b', marginTop: 2, fontWeight: '700' },
-    email: { fontSize: 11, color: '#94a3b8', marginTop: 2 },
-    empty: { fontSize: 11, fontWeight: '800', color: '#94a3b8', textTransform: 'uppercase' },
+    name: { fontSize: 15, fontWeight: '800', color: '#0f172a' },
+    meta: { fontSize: 12, color: '#64748b', marginTop: 2, fontWeight: '600' },
+    contact: { fontSize: 10, color: '#94a3b8', marginTop: 4, fontWeight: '700', textTransform: 'uppercase' },
+    empty: { fontSize: 11, fontWeight: '800', color: '#94a3b8', textTransform: 'uppercase', marginTop: 12 },
     modalOverlay: { flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.4)', justifyContent: 'flex-end' },
     modalContent: { backgroundColor: 'white', borderTopLeftRadius: 28, borderTopRightRadius: 28, maxHeight: '90%' },
     modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 24, paddingBottom: 8 },
@@ -205,11 +185,6 @@ const styles = StyleSheet.create({
         backgroundColor: '#f8fafc', borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 12,
         height: 48, paddingHorizontal: 14, fontSize: 14, fontWeight: '600', color: '#0f172a'
     },
-    roleRow: { flexDirection: 'row', gap: 8, marginBottom: 16 },
-    roleChip: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: 10, backgroundColor: '#f1f5f9' },
-    roleChipActive: { backgroundColor: '#0f172a' },
-    roleChipText: { fontSize: 12, fontWeight: '800', color: '#64748b' },
-    roleChipTextActive: { color: 'white' },
 });
 
-export default Employees;
+export default Vendors;
