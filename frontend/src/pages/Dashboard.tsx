@@ -11,7 +11,7 @@ import {
 import {
     Users, Clock, Activity, ShieldCheck, BarChart3,
     ChevronRight, ReceiptText, TrendingUp, AlertTriangle, Hourglass, 
-    Layers, Search, Building2
+    Search, Building2, SendHorizontal
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -117,7 +117,10 @@ const Dashboard = () => {
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
                     <h1 className="text-4xl pt-title-gradient pt-outfit">Dashboard</h1>
-                    <p className="text-slate-400 text-sm mt-3 font-medium">Work and progress for <span className="text-slate-900 font-bold">{user?.role === 'Vendor' ? (user?.companyName || user?.name) : user?.name}</span></p>
+                    <p className="text-slate-400 text-sm mt-3 font-medium">
+                        Welcome back, <span className="text-slate-900 font-bold">{user?.role === 'Vendor' ? (user?.companyName || user?.name) : user?.name}</span>.
+                        {isHR ? ' Here is the enterprise operations report.' : ' Track your assigned onboarding checklists below.'}
+                    </p>
                 </div>
                 {isHR && (
                     <div className="flex items-center gap-3 flex-wrap">
@@ -149,33 +152,6 @@ const Dashboard = () => {
                         </Link>
                     </div>
                 )}
-                    <h2 className="text-[10px] font-extrabold text-blue-500 uppercase tracking-[0.3em] mb-2">Systems Overview</h2>
-                    <h1 className="text-4xl pt-title-gradient pt-outfit">Dashboard</h1>
-                    <p className="text-slate-400 text-sm mt-3 font-medium">
-                        Welcome back, <span className="text-slate-900 font-bold">{user?.name}</span>. 
-                        {isHR ? ' Here is the enterprise operations report.' : ' Track your assigned onboarding checklists below.'}
-                    </p>
-                </div>
-                
-                <div className="flex items-center gap-3">
-                    {isHR && (
-                        <>
-                            <Link to="/employees" className="pt-btn-secondary px-5 py-3 hover:bg-slate-100">
-                                Employees
-                            </Link>
-                            <Link to="/workflows" className="pt-btn-primary px-5 py-3 flex items-center gap-2">
-                                <Layers className="w-4 h-4" />
-                                Workflows
-                            </Link>
-                        </>
-                    )}
-                    {isVendor && (
-                        <Link to="/vendor-bills" className="pt-btn-accent px-5 py-3 flex items-center gap-2">
-                            <ReceiptText className="w-4 h-4" />
-                            Submit Audited Bill
-                        </Link>
-                    )}
-                </div>
             </div>
 
             {/* AI Assisted: Render enhanced operational KPIs for Admin and HR roles */}

@@ -7,7 +7,7 @@ import {
     LayoutDashboard, Users, Workflow, Building2,
     User, LogOut, Menu, Bell,
     Mail, ClipboardList, ChevronDown, BarChart3,
-    Database
+    Database, ReceiptText
 } from 'lucide-react';
 import HeaderSearch from './HeaderSearch';
 import toast from 'react-hot-toast';
