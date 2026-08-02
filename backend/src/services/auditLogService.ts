@@ -8,7 +8,7 @@ export class AuditLogService {
     static async logAction(params: {
         actorId?: string;
         action: string;
-        targetType: 'Workflow' | 'Assignment' | 'User' | 'VendorBill' | 'OfferLetter';
+        targetType: 'Workflow' | 'Assignment' | 'User' | 'VendorBill' | 'OfferLetter' | 'Integration';
         targetId: string;
         details: string;
         metadata?: Record<string, any>;

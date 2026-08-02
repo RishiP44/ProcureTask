@@ -264,4 +264,51 @@ describe('ProcureTask API Tests', () => {
         });
     });
 
+    describe('10. Enterprise Integration API Tests', () => {
+        let adminToken: string;
+
+        beforeEach(async () => {
+            const admin = await User.create({ name: 'Admin', email: 'admin@test.com', passwordHash: 'pass', role: 'Admin' });
+            adminToken = jwt.sign({ id: admin._id.toString(), role: admin.role }, process.env.JWT_SECRET || 'secret');
+        });
+
+        it('should execute Workday batch sync and create employee records', async () => {
+            const res = await request(app)
+                .post('/api/integrations/sync/workday')
+                .set('Authorization', `Bearer ${adminToken}`);
+            
+            expect(res.status).toBe(200);
+            expect(res.body.success).toBe(true);
+            expect(res.body.provider).toBe('workday');
+            expect(res.body.syncedCount).toBeGreaterThan(0);
+        });
+
+        it('should process incoming Workday employee webhook payload', async () => {
+            const webhookPayload = {
+                eventType: 'employee.hired',
+                name: 'Sam Webhook',
+                email: 'sam.webhook@test.com',
+                department: 'Engineering'
+            };
+
+            const res = await request(app)
+                .post('/api/integrations/webhook/workday')
+                .send(webhookPayload);
+            
+            expect(res.status).toBe(200);
+            expect(res.body.success).toBe(true);
+            expect(res.body.processedUser.email).toBe('sam.webhook@test.com');
+        });
+
+        it('should allow Admin to fetch integration logs', async () => {
+            const res = await request(app)
+                .get('/api/integrations/logs')
+                .set('Authorization', `Bearer ${adminToken}`);
+            
+            expect(res.status).toBe(200);
+            expect(res.body.success).toBe(true);
+            expect(res.body).toHaveProperty('logs');
+        });
+    });
+
 });
